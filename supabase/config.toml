@@ -1,0 +1,27 @@
+# Minimal Supabase CLI config. `supabase start` boots local Postgres + API,
+# then `supabase db reset` applies migrations/ and runs seed.sql below.
+
+project_id = "gjejecmimin"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
