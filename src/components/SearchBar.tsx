@@ -10,9 +10,13 @@ import { useState } from "react";
 export function SearchBar({
   initialQuery = "",
   autoFocus = false,
+  placeholder = "Search a product…",
+  buttonLabel = "Search",
 }: {
   initialQuery?: string;
   autoFocus?: boolean;
+  placeholder?: string;
+  buttonLabel?: string;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -35,7 +39,7 @@ export function SearchBar({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         autoFocus={autoFocus}
-        placeholder="Search a product — e.g. milk, iPhone, brake pads…"
+        placeholder={placeholder}
         aria-label="Search products"
         className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
       />
@@ -43,7 +47,7 @@ export function SearchBar({
         type="submit"
         className="shrink-0 rounded-lg bg-slate-900 px-5 py-3 font-medium text-white transition hover:bg-slate-700"
       >
-        Search
+        {buttonLabel}
       </button>
     </form>
   );

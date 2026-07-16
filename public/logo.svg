@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 150" role="img" aria-label="gjejeçmimin">
+  <defs>
+    <linearGradient id="tag" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a5bb0"/>
+      <stop offset="1" stop-color="#17408b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Magnifying glass ring: blue base + green top arc -->
+  <circle cx="78" cy="70" r="50" fill="none" stroke="#1a4fa0" stroke-width="9"/>
+  <path d="M 40 34 A 50 50 0 0 1 121 55" fill="none" stroke="#5bb947" stroke-width="9" stroke-linecap="round"/>
+  <!-- detached green dot -->
+  <circle cx="119" cy="40" r="5.5" fill="#5bb947"/>
+
+  <!-- handle -->
+  <line x1="112" y1="104" x2="140" y2="132" stroke="#1a4fa0" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- price tag -->
+  <g transform="rotate(-38 74 68)">
+    <rect x="40" y="46" width="70" height="46" rx="9" fill="url(#tag)"/>
+    <circle cx="99" cy="57" r="5.5" fill="#eaf1fb"/>
+    <text x="66" y="82" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="700" fill="#ffffff" text-anchor="middle">€</text>
+  </g>
+
+  <!-- divider -->
+  <line x1="176" y1="34" x2="176" y2="112" stroke="#c9d4e6" stroke-width="2"/>
+
+  <!-- wordmark -->
+  <text x="196" y="97" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="800" letter-spacing="-1">
+    <tspan fill="#17408b">gjeje</tspan><tspan fill="#5bb947">çmimin</tspan>
+  </text>
+</svg>

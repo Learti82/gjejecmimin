@@ -1,5 +1,6 @@
 import { TrustBadge } from "./TrustBadge";
 import { formatPrice, timeAgo, formatDate } from "@/lib/format";
+import { getDict, getLocale } from "@/lib/i18n";
 import type { PriceObservationWithStore } from "@/lib/types";
 
 // One price observation, as shown on the product detail page. Renders store,
@@ -14,9 +15,13 @@ export function ObservationRow({
   isCheapest?: boolean;
 }) {
   const o = observation;
+  const dict = getDict();
+  const locale = getLocale();
   const storeName =
     o.store?.name ??
-    (o.trust_tier === "official" ? "Official reference" : "Unknown store");
+    (o.trust_tier === "official"
+      ? dict.common.officialReference
+      : dict.common.unknownStore);
   const city = o.store?.city ?? o.geo_city;
 
   return (
@@ -33,25 +38,25 @@ export function ObservationRow({
           {o.store?.verified && (
             <span
               className="text-xs text-verified-fg"
-              title="Registered / verified store"
+              title={dict.common.verifiedStore}
             >
-              ✓ verified store
+              ✓ {dict.common.verifiedStore}
             </span>
           )}
           {isCheapest && (
             <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-xs font-semibold text-white">
-              Cheapest
+              {dict.common.cheapest}
             </span>
           )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
           {city && <span>{city}</span>}
-          <span title={formatDate(o.observed_at)}>
-            Last verified {timeAgo(o.observed_at)}
+          <span title={formatDate(o.observed_at, locale)}>
+            {dict.common.lastVerified} {timeAgo(o.observed_at, locale)}
           </span>
           {o.confidence_score !== null && (
             <span className="text-slate-400">
-              confidence {Math.round(o.confidence_score * 100)}%
+              {dict.common.confidence} {Math.round(o.confidence_score * 100)}%
             </span>
           )}
         </div>

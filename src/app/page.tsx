@@ -6,11 +6,13 @@ import { ProductResultCard } from "@/components/ProductResultCard";
 import { SetupNotice } from "@/components/SetupNotice";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { getCategories, searchProducts } from "@/lib/data/products";
+import { getDict } from "@/lib/i18n";
 import type { ProductSearchResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const dict = getDict();
   const configured = isSupabaseConfigured();
 
   let categories: string[] = [];
@@ -32,15 +34,15 @@ export default async function HomePage() {
     <div className="space-y-10">
       <section className="space-y-5 pt-4 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Know the real price before you buy
+          {dict.home.title}
         </h1>
-        <p className="mx-auto max-w-2xl text-slate-600">
-          Compare prices across stores in Kosovo &amp; Albania. Every price is
-          labelled by how much you can trust it — official statistics, verified
-          retailers, or the crowd.
-        </p>
+        <p className="mx-auto max-w-2xl text-slate-600">{dict.home.subtitle}</p>
         <div className="mx-auto max-w-2xl">
-          <SearchBar autoFocus />
+          <SearchBar
+            autoFocus
+            placeholder={dict.search.placeholder}
+            buttonLabel={dict.search.button}
+          />
         </div>
         {categories.length > 0 && (
           <div className="mx-auto flex max-w-2xl justify-center">
@@ -56,13 +58,13 @@ export default async function HomePage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-800">
-              Browse the catalog
+              {dict.home.browse}
             </h2>
             <Link
               href="/search"
               className="text-sm text-slate-500 hover:text-slate-800"
             >
-              See all →
+              {dict.home.seeAll}
             </Link>
           </div>
           <div className="grid gap-3">

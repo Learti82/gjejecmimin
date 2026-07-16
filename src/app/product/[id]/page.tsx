@@ -12,8 +12,8 @@ import {
   getProduct,
 } from "@/lib/data/products";
 import { groupByTier, priceStats } from "@/lib/pricing";
-import { trustMeta } from "@/lib/trust";
-import { formatPrice, categoryLabel } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
+import { getDict, localizedCategory, plural } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +38,7 @@ export default async function ProductPage({
 }) {
   if (!isSupabaseConfigured()) return <SetupNotice />;
 
+  const dict = getDict();
   const product = await getProduct(params.id);
   if (!product) notFound();
 
@@ -58,7 +59,7 @@ export default async function ProductPage({
           href="/search"
           className="text-sm text-slate-500 hover:text-slate-800"
         >
-          ← Back to search
+          {dict.product.back}
         </Link>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -74,14 +75,16 @@ export default async function ProductPage({
             </div>
             <p className="mt-1 text-sm text-slate-500">
               {product.brand ? `${product.brand} · ` : ""}
-              {categoryLabel(product.category)}
+              {localizedCategory(product.category, dict)}
             </p>
           </div>
 
           {stats.count > 0 && (
             <div className="flex items-center gap-6">
               <div>
-                <div className="text-xs text-slate-400">Lowest price</div>
+                <div className="text-xs text-slate-400">
+                  {dict.product.lowestPrice}
+                </div>
                 <div className="text-2xl font-bold text-emerald-600">
                   {formatPrice(stats.min, stats.currency)}
                 </div>
@@ -90,7 +93,7 @@ export default async function ProductPage({
                 href={`/compare?product=${product.id}`}
                 className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700"
               >
-                Compare stores
+                {dict.product.compareStores}
               </Link>
             </div>
           )}
@@ -99,24 +102,27 @@ export default async function ProductPage({
 
       {stats.count === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
-          No prices recorded for this product yet.
+          {dict.product.noPrices}
         </div>
       ) : (
         <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
           {/* Observations grouped by trust tier */}
           <div className="space-y-6">
             {groups.map((group) => {
-              const meta = trustMeta(group.tier);
               return (
                 <section key={group.tier} className="space-y-3">
                   <div className="flex items-center gap-3">
                     <TrustBadge tier={group.tier} />
                     <span className="text-sm text-slate-500">
                       {group.observations.length}{" "}
-                      {group.observations.length === 1 ? "price" : "prices"}
+                      {plural(
+                        group.observations.length,
+                        dict.common.priceOne,
+                        dict.common.priceMany,
+                      )}
                     </span>
                     <span className="hidden text-xs text-slate-400 sm:inline">
-                      {meta.description}
+                      {dict.trust[group.tier].description}
                     </span>
                   </div>
                   <div className="space-y-2.5">
@@ -139,7 +145,8 @@ export default async function ProductPage({
             {indices.length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-white p-4">
                 <h3 className="mb-3 text-sm font-semibold text-slate-700">
-                  Official indices · {categoryLabel(product.category)}
+                  {dict.product.officialIndices} ·{" "}
+                  {localizedCategory(product.category, dict)}
                 </h3>
                 <ul className="space-y-2 text-sm">
                   {indices.map((idx) => (

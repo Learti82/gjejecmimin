@@ -1,8 +1,9 @@
 import { trustMeta } from "@/lib/trust";
+import { getDict } from "@/lib/i18n";
 import type { TrustTier } from "@/lib/types";
 
 // The core visual primitive that distinguishes data provenance everywhere in
-// the app. One component, driven entirely by the tier metadata in lib/trust.
+// the app. Colors come from tier metadata; the label comes from the dictionary.
 
 export function TrustBadge({
   tier,
@@ -14,11 +15,13 @@ export function TrustBadge({
   withDot?: boolean;
 }) {
   const meta = trustMeta(tier);
+  const dict = getDict();
+  const text = dict.trust[tier];
   const pad = size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full font-medium ${pad} ${meta.classes}`}
-      title={meta.description}
+      title={text.description}
     >
       {withDot && (
         <span
@@ -26,7 +29,7 @@ export function TrustBadge({
           aria-hidden
         />
       )}
-      {meta.short}
+      {text.short}
     </span>
   );
 }
