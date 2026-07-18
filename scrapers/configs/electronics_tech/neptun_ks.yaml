@@ -1,0 +1,39 @@
+id: neptun_ks
+site: Neptun Kosovo (electronics)
+category: electronics_tech
+country: XK
+base_url: https://www.neptun-ks.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+# TEMPLATE. FIRST confirm Neptun actually publishes an online catalog WITH
+# prices (not just a store-locator/marketing site). If it is marketing-only,
+# leave selectors_verified: false, note it, and skip — do not force a scrape.
+js_rendered: false          # VERIFY
+selectors_verified: false
+
+start_paths:
+  - /                        # replace with a real catalog/category path
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 5
+
+listing_selector: "REPLACE_ME"
+external_id:
+  selector: "REPLACE_ME"
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+
+notes: >
+  Confirm online catalog + prices exist before building. If marketing-only,
+  report and skip per build spec section 2.

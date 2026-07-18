@@ -1,0 +1,46 @@
+id: indomio_al
+site: Indomio Albania (real estate)
+category: real_estate
+country: AL
+base_url: https://www.indomio.al
+trust_tier: verified_retailer
+default_currency: EUR        # AL listings may be EUR or LEK — detect per listing
+rate_limit_seconds: 2.0
+# TEMPLATE. Real-estate portals are frequently JS-rendered (verify). ALL prices
+# here are ASKING prices, never confirmed sales — price_kind enforces that.
+js_rendered: true            # VERIFY (likely true for a modern portal)
+selectors_verified: false
+
+start_paths:
+  - /                        # replace with a real search/listing path
+
+pagination:
+  mode: query_param
+  param: pag                 # VERIFY the real pagination param
+  start: 1
+  max_pages: 5
+
+listing_selector: "REPLACE_ME"
+external_id:
+  selector: "REPLACE_ME"
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+  price_kind:
+    const: asking_price
+  rooms:
+    selector: "REPLACE_ME"
+  size_m2:
+    selector: "REPLACE_ME"
+  city:
+    selector: "REPLACE_ME"
+
+notes: >
+  Label every price as asking_price. Likely JS-rendered — use a headless
+  fetcher. Inspect + verify before scale runs.

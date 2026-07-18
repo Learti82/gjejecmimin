@@ -1,0 +1,58 @@
+id: merrjep_ks_cars
+site: MerrJep Kosovo
+category: cars           # MUST match folder name (configs/cars/)
+country: XK
+base_url: https://www.merrjep.com   # Kosovo domain (NOT merrjep.al)
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false
+# Listing-level selectors were verified against the live DOM (provided in the
+# build brief). Breadcrumb for CARS is 4 links: category, brand, model, city.
+selectors_verified: true
+
+start_paths:
+  - /Njoftime/Vetura     # cars category path — confirm exact slug on first run
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 5
+
+# Each listing container; de-dup uses data-product-id, never the URL.
+listing_selector: "div.row-listing[data-product-id]"
+
+external_id:
+  selector: null          # read the attribute off the listing element itself
+  attr: data-product-id
+
+fields:
+  title:
+    selector: "h2 a.Link_vis"
+  url:
+    selector: "h2 a.Link_vis"
+    attr: href
+  price:
+    selector: "p.list-price"    # OFTEN EMPTY — empty handled as "no price"
+  # Breadcrumb links (direct children via the '>' combinator). Positions:
+  # 0=category, 1=brand, 2=model, 3=city.
+  brand:
+    selector: "div.title > a.link-html.nobold"
+    index: 1
+  model:
+    selector: "div.title > a.link-html.nobold"
+    index: 2
+  city:
+    selector: "div.title > a.link-html.nobold"
+    index: 3
+  is_dealer:
+    selector: "span.label.label-default.isstore"
+    exists: true
+  is_trusted_seller:
+    selector: "span.badge-trusted-seller"
+    exists: true
+
+notes: >
+  Source of truth for these selectors is the live inspection in the build brief.
+  Confirm the exact cars category slug in start_paths on the first `inspect` run.

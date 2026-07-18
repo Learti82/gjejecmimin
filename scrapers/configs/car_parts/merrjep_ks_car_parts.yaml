@@ -1,0 +1,54 @@
+id: merrjep_ks_car_parts
+site: MerrJep Kosovo
+category: car_parts       # MUST match folder name (configs/car_parts/)
+country: XK
+base_url: https://www.merrjep.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false
+# UNVERIFIED: listing container/id/price/badges are shared site-wide, but the
+# breadcrumb fields for car parts differ from cars (likely part-type/city, not
+# brand/model). Run `inspect merrjep_ks_car_parts --pages 1`, confirm the
+# sample, adjust the breadcrumb indexes below, then set this to true.
+selectors_verified: false
+
+start_paths:
+  - /Njoftime/Automjete/Pjese-kembimi   # confirm exact slug on first run
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 5
+
+listing_selector: "div.row-listing[data-product-id]"
+
+external_id:
+  attr: data-product-id
+
+fields:
+  title:
+    selector: "h2 a.Link_vis"
+  url:
+    selector: "h2 a.Link_vis"
+    attr: href
+  price:
+    selector: "p.list-price"
+  # Breadcrumb positions UNCONFIRMED for this category — verify before trusting.
+  part_type:
+    selector: "div.title > a.link-html.nobold"
+    index: 1
+  city:
+    selector: "div.title > a.link-html.nobold"
+    index: 2
+  is_dealer:
+    selector: "span.label.label-default.isstore"
+    exists: true
+  is_trusted_seller:
+    selector: "span.badge-trusted-seller"
+    exists: true
+
+notes: >
+  Breadcrumb depth/fields for car parts were NOT verified against live DOM.
+  Inspect the actual category page and correct the indexes before scale runs.

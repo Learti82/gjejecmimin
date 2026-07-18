@@ -1,0 +1,39 @@
+id: vivafresh
+site: Viva Fresh Store (Kosovo groceries)
+category: groceries
+country: XK
+base_url: https://online.vivafresh.shop
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+# TEMPLATE. This is a real e-commerce catalog, so proper product/price cards
+# should exist. Inspect first; many storefronts are JS-rendered (verify).
+js_rendered: false          # VERIFY (compare source vs rendered DOM)
+selectors_verified: false
+
+start_paths:
+  - /                        # replace with a real category/listing path
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 5
+
+listing_selector: "REPLACE_ME"
+external_id:
+  selector: "REPLACE_ME"
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+  unit:
+    selector: "REPLACE_ME"   # pack size / weight if present
+
+notes: >
+  Discovery target. Inspect + verify before scale runs.

@@ -1,0 +1,16 @@
+# Core engine
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.0
+PyYAML>=6.0
+
+# Tests
+pytest>=8.0
+
+# Optional: only needed to write the Postgres/Supabase staging table
+# (engine/storage.write_postgres). The JSONL path needs none of this.
+# psycopg[binary]>=3.1
+
+# Optional: only needed for JS-rendered sites (configs with js_rendered: true).
+# A headless-browser fetcher is not included in the default engine.
+# playwright>=1.44

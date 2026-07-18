@@ -1,0 +1,42 @@
+id: gjirafa50
+site: Gjirafa50 (Kosovo electronics)
+category: electronics_tech
+country: XK
+base_url: https://gjirafa50.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+# TEMPLATE — selectors are placeholders. Before anything:
+#   1. Compare "View Source" vs the rendered DOM to decide js_rendered.
+#   2. Read robots.txt (`robots gjirafa50`) + ToS for anti-scraping language.
+#   3. `inspect gjirafa50 --pages 1`, fill the selectors from real output.
+#   4. Set selectors_verified: true only after the sample looks correct.
+js_rendered: false          # VERIFY — likely a real catalog; confirm rendering
+selectors_verified: false
+
+start_paths:
+  - /                        # replace with an actual category/listing path
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 5
+
+listing_selector: "REPLACE_ME"     # product card container
+external_id:
+  selector: "REPLACE_ME"           # a stable product id/sku; attr or text
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+  brand:
+    selector: "REPLACE_ME"
+
+notes: >
+  Discovery target. Do not run at scale until inspected and verified.

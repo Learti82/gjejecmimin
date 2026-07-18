@@ -1,0 +1,58 @@
+id: merrjep_ks_real_estate
+site: MerrJep Kosovo
+category: real_estate     # MUST match folder name (configs/real_estate/)
+country: XK
+base_url: https://www.merrjep.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false
+# UNVERIFIED breadcrumb: real-estate listings likely carry size/rooms/location
+# rather than brand/model. Inspect before trusting the field mapping below.
+# ALSO: every real-estate price is an ASKING price, never a confirmed sale —
+# that is recorded via price_kind below and must surface in the UI.
+selectors_verified: false
+
+start_paths:
+  - /Njoftime/Patundshmeri   # confirm exact slug on first run
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 5
+
+listing_selector: "div.row-listing[data-product-id]"
+
+external_id:
+  attr: data-product-id
+
+fields:
+  title:
+    selector: "h2 a.Link_vis"
+  url:
+    selector: "h2 a.Link_vis"
+    attr: href
+  price:
+    selector: "p.list-price"
+  price_kind:
+    const: asking_price       # constant tag — real estate is asking price only
+  # Breadcrumb positions UNCONFIRMED — real estate typically: type, location,
+  # (and size/rooms may live elsewhere in the card, not the breadcrumb).
+  property_type:
+    selector: "div.title > a.link-html.nobold"
+    index: 1
+  city:
+    selector: "div.title > a.link-html.nobold"
+    index: 2
+  is_dealer:
+    selector: "span.label.label-default.isstore"
+    exists: true
+  is_trusted_seller:
+    selector: "span.badge-trusted-seller"
+    exists: true
+
+notes: >
+  Label ALL real-estate prices as asking price (price_kind=asking_price), never
+  as a confirmed transaction. Verify breadcrumb + where size/rooms actually live
+  in the card DOM before scale runs.

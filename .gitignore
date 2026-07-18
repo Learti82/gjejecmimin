@@ -30,3 +30,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# python / scrapers
+__pycache__/
+*.pyc
+.pytest_cache/
+/scrapers/output/
