@@ -6,48 +6,41 @@ base_url: https://gjirafamall.com
 trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
-# CONFIRMED server-rendered: `discover` found 30 products via plain requests,
-# so NO headless browser is needed. robots.txt: ALLOWED.
+# CONFIRMED server-rendered (discover saw 30 products via plain requests) and
+# robots.txt ALLOWED. Selectors below are from a live discover run.
 js_rendered: false
 selectors_verified: false      # flip to true after `inspect` looks right
 
-# Real category paths (robots ALLOWED).
 start_paths:
   - /parfum
   - /aroma-kozmetike
 
 pagination:
   mode: query_param
-  param: page                  # VERIFY on the site (click page 2, read the URL)
+  param: page                  # VERIFY: open page 2 in a browser and read the URL
   start: 1
   max_pages: 5
 
-# From your live `discover` run:
-#   container  -> section.details.flex.flex-col.h-full.justify-end.pb-2  (x30)
-#   price      -> current price = span.price (NOT the .old-price strikethrough)
 listing_selector: "section.details.flex.flex-col.h-full.justify-end.pb-2"
 
-# external_id: prefer a stable id. Re-run `discover` (now shows card anatomy) —
-# if the card has a data-* id, use it (attr: that name). Otherwise derive a
-# stable id from the product URL's last path segment (the default below).
+# Stable id from the product URL's last path segment (unique per product, and
+# dedups the same product appearing under /parfum and /aroma-kozmetike).
 external_id:
-  selector: "REPLACE_ME_product_link"   # the <a> that links to the product page
+  selector: "a.text-gray-800"
   attr: href
-  regex: "([^/?#]+)/?$"                  # last URL segment => stable per product
+  regex: "([^/?#]+)/?$"
 
 fields:
   title:
-    selector: "REPLACE_ME_title"        # e.g. the product-link text or an h3
+    selector: "h3.product-title"
   url:
-    selector: "REPLACE_ME_product_link" # same <a> as external_id
+    selector: "a.text-gray-800"
     attr: href
   price:
     selector: "span.price:not(.old-price)"   # current price, skips strikethrough
-  brand:
-    selector: "REPLACE_ME_brand"        # optional; delete if the card has none
 
 notes: >
-  listing_selector + price are from a live discover run. Fill the three
-  REPLACE_ME_* from `discover gjirafamall_fragrances` (card anatomy section),
-  then `inspect gjirafamall_fragrances --pages 1`. When titles+prices look
-  right, set selectors_verified: true.
+  Selectors verified against a fixture built from the live discover output.
+  Run `inspect gjirafamall_fragrances --pages 1`; when real perfume names +
+  EUR prices show, set selectors_verified: true. The card wrapper also carries
+  data-productid / data-discountedprice if you later prefer an attribute id.
