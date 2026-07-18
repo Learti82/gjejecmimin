@@ -6,42 +6,48 @@ base_url: https://gjirafamall.com
 trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
-# js_rendered: unknown until inspected. If `inspect` returns 0 rows but the
-# browser shows products, the catalog is JS-rendered -> set js_rendered: true
-# and use a headless fetcher (Playwright).
+# CONFIRMED server-rendered: `discover` found 30 products via plain requests,
+# so NO headless browser is needed. robots.txt: ALLOWED.
 js_rendered: false
-selectors_verified: false      # fill selectors via `discover`, then flip to true
+selectors_verified: false      # flip to true after `inspect` looks right
 
-# Real category paths (verified via search). Confirm on first inspect.
+# Real category paths (robots ALLOWED).
 start_paths:
   - /parfum
   - /aroma-kozmetike
 
 pagination:
   mode: query_param
-  param: page                  # VERIFY the real pagination param on the site
+  param: page                  # VERIFY on the site (click page 2, read the URL)
   start: 1
   max_pages: 5
 
-# TO FILL: run `python engine/runner.py discover gjirafamall_fragrances`
-# (on a machine with open network) — it prints the likely selectors below.
-listing_selector: "REPLACE_ME"
+# From your live `discover` run:
+#   container  -> section.details.flex.flex-col.h-full.justify-end.pb-2  (x30)
+#   price      -> current price = span.price (NOT the .old-price strikethrough)
+listing_selector: "section.details.flex.flex-col.h-full.justify-end.pb-2"
+
+# external_id: prefer a stable id. Re-run `discover` (now shows card anatomy) —
+# if the card has a data-* id, use it (attr: that name). Otherwise derive a
+# stable id from the product URL's last path segment (the default below).
 external_id:
-  selector: "REPLACE_ME"       # a stable product id/sku (attr or text)
-  attr: null
+  selector: "REPLACE_ME_product_link"   # the <a> that links to the product page
+  attr: href
+  regex: "([^/?#]+)/?$"                  # last URL segment => stable per product
+
 fields:
   title:
-    selector: "REPLACE_ME"
+    selector: "REPLACE_ME_title"        # e.g. the product-link text or an h3
   url:
-    selector: "REPLACE_ME"
+    selector: "REPLACE_ME_product_link" # same <a> as external_id
     attr: href
   price:
-    selector: "REPLACE_ME"
+    selector: "span.price:not(.old-price)"   # current price, skips strikethrough
   brand:
-    selector: "REPLACE_ME"
+    selector: "REPLACE_ME_brand"        # optional; delete if the card has none
 
 notes: >
-  GjirafaMall is a large marketplace; fragrances/cosmetics live under /parfum
-  and /aroma-kozmetike. Check robots.txt + ToS before enabling. Complete the
-  selectors with `discover`, confirm with `inspect --fixture`, then set
-  selectors_verified: true.
+  listing_selector + price are from a live discover run. Fill the three
+  REPLACE_ME_* from `discover gjirafamall_fragrances` (card anatomy section),
+  then `inspect gjirafamall_fragrances --pages 1`. When titles+prices look
+  right, set selectors_verified: true.
