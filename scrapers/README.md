@@ -49,6 +49,11 @@ python engine/runner.py list
 # 2. Check robots.txt FIRST (respects Disallow + Crawl-delay)
 python engine/runner.py robots merrjep_ks_cars
 
+# 2b. New site? Let `discover` suggest the listing/price selectors for you.
+python engine/runner.py discover gjirafamall_fragrances
+#     (offline: analyze a page you saved from your browser)
+python engine/runner.py discover --fixture saved_page.html
+
 # 3. Test small: fetch 1-2 pages and eyeball 5-10 parsed rows. Stores nothing.
 python engine/runner.py inspect merrjep_ks_cars --pages 1
 #    (offline: parse a saved page instead of the network)
@@ -106,6 +111,14 @@ python official_data_importers/fuel_bulletin_importer.py path/to/fuel_bulletin.c
 | `neptun_ks` | electronics_tech | ❌ | confirm it has an online catalog w/ prices |
 | `vivafresh` | groceries | ❌ | template — inspect from scratch |
 | `indomio_al` | real_estate | ❌ | likely JS-rendered; asking-price only |
+| `gjirafamall_fragrances` | fragrances_cosmetics | ❌ | real paths /parfum, /aroma-kozmetike; fill selectors via `discover` |
+| `gjirafamall_clothing` | clothing | ❌ | real path /veshje; card markup likely shared with fragrances |
+| `gjirafamall_furniture` | furniture | ❌ | confirm furniture listing slug; fill via `discover` |
+| `foleja_fragrances` | fragrances_cosmetics | ❌ | real path /Kozmetike-Kujdesi-Personal/Parfum/ |
+
+Every ❌ config ships with real URLs/category paths but placeholder selectors
+(`REPLACE_ME`) — run `discover` on an open network to fill them, then `inspect`
+to confirm and flip `selectors_verified: true`.
 
 ## Notes / limitations
 

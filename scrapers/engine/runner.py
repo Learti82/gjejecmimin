@@ -128,6 +128,29 @@ def cmd_inspect(args: argparse.Namespace) -> None:
     _print_sample(dedup(all_records), args.limit)
 
 
+def cmd_discover(args: argparse.Namespace) -> None:
+    from engine.discover import format_report
+
+    if args.fixture:
+        with open(args.fixture, "r", encoding="utf-8") as fh:
+            html = fh.read()
+        print(format_report(html))
+        print("\n(analyzed local fixture — no network used)")
+        return
+
+    cfg = load_config(_find_config(args.config)) if args.config else None
+    if not args.url and not cfg:
+        raise SystemExit("Provide --url, or a config name, or --fixture.")
+    url = args.url or (cfg.base_url + cfg.start_paths[0])
+    rate = cfg.rate_limit_seconds if cfg else 2.0
+    client = HttpClient(rate_limit_seconds=rate)
+    html = client.get(url)
+    if not html:
+        raise SystemExit(f"Could not fetch {url}")
+    print(f"# {url}\n")
+    print(format_report(html))
+
+
 def cmd_run(args: argparse.Namespace) -> None:
     cfg = load_config(_find_config(args.config))
 
@@ -187,6 +210,12 @@ def build_parser() -> argparse.ArgumentParser:
     pr = sub.add_parser("robots", help="check robots.txt for a config")
     pr.add_argument("config")
     pr.set_defaults(func=cmd_robots)
+
+    pd = sub.add_parser("discover", help="suggest listing/price selectors for a new site")
+    pd.add_argument("config", nargs="?", help="optional config (uses its first start URL)")
+    pd.add_argument("--url", help="page URL to analyze")
+    pd.add_argument("--fixture", help="analyze a saved HTML file instead of the network")
+    pd.set_defaults(func=cmd_discover)
 
     pi = sub.add_parser("inspect", help="fetch 1-2 pages (or --fixture) and show a sample")
     pi.add_argument("config")

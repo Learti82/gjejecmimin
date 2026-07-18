@@ -1,0 +1,47 @@
+id: gjirafamall_fragrances
+site: GjirafaMall (Kosovo marketplace)
+category: fragrances_cosmetics
+country: XK
+base_url: https://gjirafamall.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+# js_rendered: unknown until inspected. If `inspect` returns 0 rows but the
+# browser shows products, the catalog is JS-rendered -> set js_rendered: true
+# and use a headless fetcher (Playwright).
+js_rendered: false
+selectors_verified: false      # fill selectors via `discover`, then flip to true
+
+# Real category paths (verified via search). Confirm on first inspect.
+start_paths:
+  - /parfum
+  - /aroma-kozmetike
+
+pagination:
+  mode: query_param
+  param: page                  # VERIFY the real pagination param on the site
+  start: 1
+  max_pages: 5
+
+# TO FILL: run `python engine/runner.py discover gjirafamall_fragrances`
+# (on a machine with open network) — it prints the likely selectors below.
+listing_selector: "REPLACE_ME"
+external_id:
+  selector: "REPLACE_ME"       # a stable product id/sku (attr or text)
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+  brand:
+    selector: "REPLACE_ME"
+
+notes: >
+  GjirafaMall is a large marketplace; fragrances/cosmetics live under /parfum
+  and /aroma-kozmetike. Check robots.txt + ToS before enabling. Complete the
+  selectors with `discover`, confirm with `inspect --fixture`, then set
+  selectors_verified: true.

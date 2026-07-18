@@ -1,0 +1,40 @@
+id: gjirafamall_clothing
+site: GjirafaMall (Kosovo marketplace)
+category: clothing
+country: XK
+base_url: https://gjirafamall.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false             # VERIFY (0 rows on inspect + products in browser => true)
+selectors_verified: false
+
+start_paths:
+  - /veshje                    # clothing (verified via search); confirm on inspect
+
+pagination:
+  mode: query_param
+  param: page                  # VERIFY
+  start: 1
+  max_pages: 5
+
+# TO FILL via `discover gjirafamall_clothing`:
+listing_selector: "REPLACE_ME"
+external_id:
+  selector: "REPLACE_ME"
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+  brand:
+    selector: "REPLACE_ME"
+
+notes: >
+  Same site as gjirafamall_fragrances but a different category folder — the card
+  markup is usually identical across categories, so once you have the fragrances
+  selectors these likely carry over (confirm with inspect). Check robots/ToS.

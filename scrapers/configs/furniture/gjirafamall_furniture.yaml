@@ -1,0 +1,39 @@
+id: gjirafamall_furniture
+site: GjirafaMall (Kosovo marketplace)
+category: furniture
+country: XK
+base_url: https://gjirafamall.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false             # VERIFY
+selectors_verified: false
+
+start_paths:
+  - /gjirafamall-furniture-2    # furniture store/section — CONFIRM the real
+                                # listing slug on the site (may be /mobilje-...)
+
+pagination:
+  mode: query_param
+  param: page                  # VERIFY
+  start: 1
+  max_pages: 5
+
+# TO FILL via `discover gjirafamall_furniture`:
+listing_selector: "REPLACE_ME"
+external_id:
+  selector: "REPLACE_ME"
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+
+notes: >
+  Confirm the exact furniture listing path first (the homepage furniture link is
+  /gjirafamall-furniture-2, but the browsable category slug may differ). Then
+  fill selectors with discover. Check robots/ToS.

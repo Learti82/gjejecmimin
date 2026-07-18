@@ -1,0 +1,40 @@
+id: foleja_fragrances
+site: Foleja (Kosovo retailer)
+category: fragrances_cosmetics
+country: XK
+base_url: https://www.foleja.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false             # VERIFY
+selectors_verified: false
+
+# Foleja uses hierarchical category paths. Fragrances live here (via search):
+start_paths:
+  - /Kozmetike-Kujdesi-Personal/Parfum/
+
+pagination:
+  mode: query_param
+  param: page                  # VERIFY (Foleja may use a path-based pager)
+  start: 1
+  max_pages: 5
+
+# TO FILL via `discover foleja_fragrances`:
+listing_selector: "REPLACE_ME"
+external_id:
+  selector: "REPLACE_ME"
+  attr: null
+fields:
+  title:
+    selector: "REPLACE_ME"
+  url:
+    selector: "REPLACE_ME"
+    attr: href
+  price:
+    selector: "REPLACE_ME"
+  brand:
+    selector: "REPLACE_ME"
+
+notes: >
+  Foleja also sells electronics/appliances — separate configs per category if
+  you add those. Confirm pagination style (query param vs path). Check robots/ToS.
