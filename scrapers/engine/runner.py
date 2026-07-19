@@ -141,6 +141,7 @@ def cmd_inspect(args: argparse.Namespace) -> None:
         print("(js_rendered: true — using headless Chromium via Playwright)")
     all_records: list[Listing] = []
     pages = max(1, min(args.pages, 2))  # inspect touches at most 2 pages
+    saved = False
     try:
         for path in cfg.start_paths[:1]:
             for url in page_urls(cfg, path, max_pages=pages):
@@ -150,9 +151,40 @@ def cmd_inspect(args: argparse.Namespace) -> None:
                     print(f"  robots.txt disallows {url} — skipping")
                     continue
                 if not html:
-                    print(f"  failed to fetch {url}")
+                    print(f"  FAILED to fetch {url} (no response after retries — "
+                          f"network issue, or the site refused the request)")
                     continue
-                all_records.extend(records_from_html(cfg, html))
+
+                print(f"  fetched {url} — {len(html)} bytes")
+                if args.save_html and not saved:
+                    with open(args.save_html, "w", encoding="utf-8") as fh:
+                        fh.write(html)
+                    print(f"  saved raw HTML to {args.save_html}")
+                    saved = True
+
+                soup_records = list(records_from_html(cfg, html))
+                if not soup_records:
+                    # Diagnose WHY nothing matched: is the listing container
+                    # even present in the raw response?
+                    from bs4 import BeautifulSoup
+
+                    hit = BeautifulSoup(html, "lxml").select(cfg.listing_selector)
+                    if not hit:
+                        print(
+                            f"  0 listings matched listing_selector "
+                            f"'{cfg.listing_selector}' in the raw response.\n"
+                            f"  This usually means one of:\n"
+                            f"    - the listings are injected by JavaScript after page\n"
+                            f"      load (View Source in your browser — Ctrl+U — would be\n"
+                            f"      empty even though DevTools' Inspector looks fine,\n"
+                            f"      because Inspector shows the POST-JS DOM). If so this\n"
+                            f"      config needs js_rendered: true.\n"
+                            f"    - the site served a different page than expected (bot\n"
+                            f"      block / redirect / wrong path) — check --save-html\n"
+                            f"      output, or open {url} in an incognito window.\n"
+                            f"    - the selector itself changed on the live site."
+                        )
+                all_records.extend(soup_records)
     finally:
         if hasattr(client, "close"):
             client.close()
@@ -215,6 +247,8 @@ def cmd_run(args: argparse.Namespace) -> None:
     if cfg.js_rendered:
         print("(js_rendered: true — using headless Chromium via Playwright)")
     all_records: list[Listing] = []
+    fetch_failures = 0
+    zero_match_pages = 0
     try:
         for path in cfg.start_paths:
             for url in page_urls(cfg, path, max_pages=args.pages):
@@ -230,11 +264,24 @@ def cmd_run(args: argparse.Namespace) -> None:
                     html = client.get(url)
                 except DisallowedByRobots:
                     continue
-                if html:
-                    all_records.extend(records_from_html(cfg, html))
+                if not html:
+                    fetch_failures += 1
+                    continue
+                page_records = list(records_from_html(cfg, html))
+                if not page_records:
+                    zero_match_pages += 1
+                all_records.extend(page_records)
     finally:
         if hasattr(client, "close"):
             client.close()
+
+    if fetch_failures:
+        print(f"WARNING: {fetch_failures} page(s) failed to fetch (no response "
+              f"after retries) and were skipped.")
+    if zero_match_pages:
+        print(f"WARNING: {zero_match_pages} fetched page(s) matched 0 listings — "
+              f"run `inspect {cfg.id} --pages 1` for a diagnosis (JS-rendering, "
+              f"a changed selector, or a blocked/redirected response).")
 
     records = dedup(all_records)
 
@@ -286,6 +333,7 @@ def build_parser() -> argparse.ArgumentParser:
     pi.add_argument("--pages", type=int, default=1)
     pi.add_argument("--limit", type=int, default=10)
     pi.add_argument("--fixture", help="parse a local HTML file instead of the network")
+    pi.add_argument("--save-html", help="save the first fetched page's raw HTML to this path")
     pi.set_defaults(func=cmd_inspect)
 
     prun = sub.add_parser("run", help="full scrape (gated) + benchmark + store")
