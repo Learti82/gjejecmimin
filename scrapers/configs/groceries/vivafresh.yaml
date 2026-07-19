@@ -6,48 +6,54 @@ base_url: https://online.vivafresh.shop
 trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
-# robots.txt clean (Crawl-delay: 1 — our engine's 2s floor already exceeds
-# this). No anti-scraping language found.
-#
-# CONFIRMED JS-rendered: two different plain-request fetches (homepage and
-# /categories) both returned only the same empty cart-icon shell — the real
-# categories/products are injected client-side after load, same pattern as
-# Barnatore. Needs the headless-browser client (automatic once this is true).
+# CONFIRMED JS-rendered: the homepage and /categories only ever show an empty
+# cart-icon shell (categories are likely browsed via client-side JS, not
+# separate crawlable URLs). A live discover run against a /product?id=...
+# page — through headless Chromium — found a real 135-item product grid, so
+# that's the entry point instead of a "category" page.
 js_rendered: true
-selectors_verified: false   # confirm with `discover`/`inspect` through the
-                             # browser client, then flip this to true
+selectors_verified: false      # one more `inspect` run, then flip this to true
 
+# A single real, confirmed product page. Its rendered DOM includes a broad
+# catalog/related-items grid (135 real priced products in the live test) —
+# this is a best-effort snapshot of whatever that widget shows, NOT a full
+# category crawl (the site doesn't expose separate category URLs we could
+# find). Good enough to get real grocery data flowing; a true full-catalog
+# crawl would need the site's internal category API, out of scope for now.
 start_paths:
-  - /categories              # best current guess — confirm via a browser-rendered
-                              # `discover` run; may need a deeper category URL
+  - /product?id=1227607
 
 pagination:
-  mode: query_param
-  param: page                # UNCONFIRMED — verify by paging manually
-  start: 1
-  max_pages: 20
+  mode: none    # single confirmed entry point — see note above
+  max_pages: 1
 
-listing_selector: ".product-box"
+listing_selector: "div.product-box"
 
+# Cleaner than parsing the URL: the card carries a real numeric id directly.
+# selector: null reads the attribute off the listing element itself, not a
+# (nonexistent) nested descendant.
 external_id:
-  selector: "a.product-link"
-  attr: href
-  regex: "([^/?#]+)/?$"      # stable id from the product URL's last segment
+  selector: null
+  attr: data-id
 
 fields:
   title:
-    selector: "a.product-link"
+    selector: "p.title"
   url:
     selector: "a.product-link"
     attr: href
+  # ⚠️ UNCERTAIN — discover found two price-like classes: p.bigprice (x77) and
+  # p.smallprice (x58) on 135 total cards, which doesn't cleanly split into
+  # "every card has one, some have both" the way GjirafaMall/Barnatore's
+  # current/old-price pairs did. Best guess: bigprice is the prominent/current
+  # price. CONFIRM by opening a couple of these products on the site and
+  # checking which number is the actual price before trusting this.
   price:
-    selector: ".bigprice"
+    selector: "p.bigprice"
 
 notes: >
-  Container/title/price selectors (.product-box / a.product-link / .bigprice)
-  are from earlier documentation, NOT yet independently confirmed against
-  actual rendered content — two plain-request fetches only ever saw the empty
-  shell, so they've never been tested against real product markup. Run
-  `discover vivafresh` (now goes through headless Chromium automatically) to
-  get a live card anatomy and correct these if needed, then
-  `inspect vivafresh --pages 1` before flipping selectors_verified.
+  Container/title/price/id all confirmed against a real live render (135
+  products, e.g. "Vaj per flok Pantene Repair&Protect 100m" with data-id
+  1219887). Price selector needs a visual double-check (see comment above).
+  Run `inspect vivafresh --pages 1` and eyeball the sample before flipping
+  selectors_verified.
