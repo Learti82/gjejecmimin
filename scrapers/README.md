@@ -161,7 +161,7 @@ python official_data_importers/fuel_bulletin_importer.py path/to/fuel_bulletin.c
 |---|---|---|---|
 | `merrjep_ks_cars` | cars | ✅ | live path `/shpallje/makina/vetura`; 4-link breadcrumb |
 | `merrjep_ks_real_estate` | real_estate | ❌ (one `inspect` away) | live path `/shpallje/patundshmeri`; 2-link breadcrumb (type, city); rentals detected via `/ muaj` |
-| `merrjep_ks_car_parts` | car_parts | ❌ | live path confirmed; breadcrumb depth for this category still unconfirmed |
+| `merrjep_ks_car_parts` | car_parts | ✅ | live path confirmed; 2-link breadcrumb (category, city) — most listings have no price (contact-only), which is expected |
 | `vivafresh` | groceries | ❌ | selectors confirmed live; needs a real category start_path |
 | `gjirafamall_fragrances` | fragrances_cosmetics | ❌ + ⚠️ ToS | fully wired from live `discover`; blocked by `tos_restricted` |
 | `gjirafamall_clothing` | clothing | ❌ + ⚠️ ToS | real path /veshje; blocked by `tos_restricted` |
@@ -187,10 +187,8 @@ python engine/runner.py inspect merrjep_ks_real_estate --pages 1   # confirm sam
 #   then set selectors_verified: true in the config, and:
 python engine/runner.py run merrjep_ks_real_estate --pages 50
 
-# --- Car parts (MerrJep) ---
-python engine/runner.py inspect merrjep_ks_car_parts --pages 1
-#   fix breadcrumb indexes if needed, set selectors_verified: true, then:
-python engine/runner.py run merrjep_ks_car_parts --pages 10
+# --- Car parts (MerrJep) — already verified ---
+python engine/runner.py run merrjep_ks_car_parts --pages 30
 
 # --- Groceries (Viva Fresh) — needs a real category URL first ---
 #   open online.vivafresh.shop in a browser, copy a real products/category URL,
