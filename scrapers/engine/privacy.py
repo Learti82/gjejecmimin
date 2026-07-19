@@ -26,12 +26,17 @@ _PHONE_RES = [
     re.compile(r"\b\d{3}[\s\.\-]?\d{3}[\s\.\-]?\d{3,4}\b"),
 ]
 
-# "call/contact/whatsapp/viber <Name>" — strip the directive + following token(s).
+# "call/contact/whatsapp/viber <Name>" — strip the directive + a following
+# Name, IF one is present. Case-insensitivity is scoped to just the directive
+# word via (?i:...) — the Name group is intentionally case-SENSITIVE (requires
+# an actual capital letter). Without that scoping, re.I would also make the
+# "capitalized name" class match lowercase, so ordinary sentence continuations
+# like "kontakt për çmim" ("contact for price") would get swallowed whole
+# instead of just the directive word — verified against that exact case.
 _CONTACT_RE = re.compile(
-    r"\b(?:call|contact|kontakt|telefon|tel|whatsapp|viber|merrni|thirrni|"
-    r"kontaktoni|na kontaktoni)\b[:\s]*"
-    r"([A-ZÇËË][\wçëÇË]+(?:\s+[A-ZÇËË][\wçëÇË]+)?)?",
-    re.I,
+    r"(?i:\b(?:call|contact|kontakt|telefon|tel|whatsapp|viber|merrni|thirrni|"
+    r"kontaktoni|na kontaktoni)\b)[:\s]*"
+    r"([A-ZÇË][\wçëÇË]*(?:\s+[A-ZÇË][\wçëÇË]*)?)?"
 )
 
 

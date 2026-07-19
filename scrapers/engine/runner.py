@@ -100,8 +100,20 @@ def cmd_robots(args: argparse.Namespace) -> None:
         print(f"  crawl-delay advertised: {delay}s")
 
 
+def _warn_if_tos_restricted(cfg: ScraperConfig) -> None:
+    if not cfg.tos_restricted:
+        return
+    print("=" * 70)
+    print(f"WARNING: '{cfg.id}' ({cfg.site}) has a flagged ToS restriction:")
+    print(f"  {cfg.tos_note or 'Terms of Service prohibit automated access.'}")
+    print("  This command still runs, but `run` will refuse without")
+    print("  --acknowledge-tos-risk. Make your own call before scraping at scale.")
+    print("=" * 70)
+
+
 def cmd_inspect(args: argparse.Namespace) -> None:
     cfg = load_config(_find_config(args.config))
+    _warn_if_tos_restricted(cfg)
 
     if args.fixture:
         with open(args.fixture, "r", encoding="utf-8") as fh:
@@ -139,6 +151,8 @@ def cmd_discover(args: argparse.Namespace) -> None:
         return
 
     cfg = load_config(_find_config(args.config)) if args.config else None
+    if cfg:
+        _warn_if_tos_restricted(cfg)
     if not args.url and not cfg:
         raise SystemExit("Provide --url, or a config name, or --fixture.")
     url = args.url or (cfg.base_url + cfg.start_paths[0])
@@ -159,6 +173,13 @@ def cmd_run(args: argparse.Namespace) -> None:
             f"Refusing to run '{cfg.id}': selectors_verified is false.\n"
             f"Inspect the live site first (`inspect {cfg.id}`), confirm the sample "
             f"output, set selectors_verified: true in the config, then re-run."
+        )
+    if cfg.tos_restricted and not args.acknowledge_tos_risk:
+        raise SystemExit(
+            f"Refusing to run '{cfg.id}': tos_restricted is true.\n"
+            f"  {cfg.tos_note or 'Terms of Service prohibit automated access.'}\n"
+            f"This is flagged for your decision, not an automatic block. If you have "
+            f"decided to proceed anyway, re-run with --acknowledge-tos-risk."
         )
     if cfg.js_rendered:
         print("WARNING: config marks the site JS-rendered; the requests-based "
@@ -231,6 +252,9 @@ def build_parser() -> argparse.ArgumentParser:
     prun.add_argument("--dsn", help="Postgres DSN to write staging table instead of JSONL")
     prun.add_argument("--allow-unverified", action="store_true",
                       help="run even if selectors_verified is false (dangerous)")
+    prun.add_argument("--acknowledge-tos-risk", action="store_true",
+                      help="run even if tos_restricted is true — only after you've "
+                           "made your own legal call on that site")
     prun.add_argument("--allow-unknown-robots", action="store_true",
                       help="proceed when robots.txt cannot be fetched")
     prun.set_defaults(func=cmd_run)

@@ -69,6 +69,10 @@ python engine/runner.py run merrjep_ks_cars --dsn "postgresql://…"
 **Gates that protect you**
 - `run` refuses any config with `selectors_verified: false` (override:
   `--allow-unverified`, discouraged).
+- `run` refuses any config with `tos_restricted: true` (override:
+  `--acknowledge-tos-risk`, only after you've made the legal call yourself).
+  `inspect`/`discover` print a loud warning but don't block — testing a couple
+  pages and running production scraping are different risk profiles.
 - `run` skips URLs disallowed by robots.txt, and skips URLs whose robots.txt
   can't be fetched unless you pass `--allow-unknown-robots`.
 - Rate limit is clamped to **≥ 2s per host**; an advertised Crawl-delay that is
@@ -100,21 +104,33 @@ python official_data_importers/instat_importer.py path/to/instat_release.csv
 python official_data_importers/fuel_bulletin_importer.py path/to/fuel_bulletin.csv
 ```
 
+## Site legal status (live-checked)
+
+| Site | robots.txt | ToS | Verdict |
+|---|---|---|---|
+| MerrJep (cars, car parts, real estate) | `Allow: /` | no anti-scraping language found | ✅ clear to build |
+| online.vivafresh.shop (groceries) | clean, `Crawl-delay: 1` | none found | ✅ clear to build |
+| GjirafaMall / Gjirafa50 (marketplace, electronics) | permissive | **explicitly bans bots/automated access + data-extraction tools**, company-wide | ⚠️ flagged — `tos_restricted: true`, `run` blocked without `--acknowledge-tos-risk` |
+| Neptun-ks.com (electronics) | **`User-agent: ClaudeBot / Disallow: /`** (also GPTBot, CCBot, etc.) | — | ⛔ skip — direct signal against Claude-based access, honored in spirit regardless of this engine's own UA string |
+| Indomio.al (AL real estate) | aggressive bot-blocklist (hundreds of named tools) | — | ⚠️ your call — not yet inspected further pending a decision |
+| Barnatore Online (pharmacy) | clean | none found | ✅ clear to build, but **JS-rendered** (needs Playwright) |
+| JYSK-ks.com (furniture) | no robots.txt file (ambiguous) | not checked | confirmed selectors available; category pages need drill-down into subcategories; Scandinavian price format (`"20,-"`) needs a parser tweak |
+
 ## Config status
 
 | Config | Category | Verified | Notes |
 |---|---|---|---|
-| `merrjep_ks_cars` | cars | ✅ | selectors from the build brief; confirm slug |
-| `merrjep_ks_car_parts` | car_parts | ❌ | breadcrumb differs — inspect first |
-| `merrjep_ks_real_estate` | real_estate | ❌ | asking-price only; inspect breadcrumb |
-| `gjirafa50` | electronics_tech | ❌ | template — inspect from scratch |
-| `neptun_ks` | electronics_tech | ❌ | confirm it has an online catalog w/ prices |
-| `vivafresh` | groceries | ❌ | template — inspect from scratch |
-| `indomio_al` | real_estate | ❌ | likely JS-rendered; asking-price only |
-| `gjirafamall_fragrances` | fragrances_cosmetics | ❌ | real paths /parfum, /aroma-kozmetike; fill selectors via `discover` |
-| `gjirafamall_clothing` | clothing | ❌ | real path /veshje; card markup likely shared with fragrances |
-| `gjirafamall_furniture` | furniture | ❌ | confirm furniture listing slug; fill via `discover` |
-| `foleja_fragrances` | fragrances_cosmetics | ❌ | real path /Kozmetike-Kujdesi-Personal/Parfum/ |
+| `merrjep_ks_cars` | cars | ✅ | live path `/shpallje/makina/vetura`; 4-link breadcrumb |
+| `merrjep_ks_real_estate` | real_estate | ❌ (one `inspect` away) | live path `/shpallje/patundshmeri`; 2-link breadcrumb (type, city); rentals detected via `/ muaj` |
+| `merrjep_ks_car_parts` | car_parts | ❌ | live path confirmed; breadcrumb depth for this category still unconfirmed |
+| `vivafresh` | groceries | ❌ | selectors confirmed live; needs a real category start_path |
+| `gjirafamall_fragrances` | fragrances_cosmetics | ❌ + ⚠️ ToS | fully wired from live `discover`; blocked by `tos_restricted` |
+| `gjirafamall_clothing` | clothing | ❌ + ⚠️ ToS | real path /veshje; blocked by `tos_restricted` |
+| `gjirafamall_furniture` | furniture | ❌ + ⚠️ ToS | confirm furniture listing slug; blocked by `tos_restricted` |
+| `foleja_fragrances` | fragrances_cosmetics | ❌ | real path /Kozmetike-Kujdesi-Personal/Parfum/ — Foleja is a different company, not flagged |
+| `gjirafa50` | electronics_tech | ❌ | selectors confirmed (`.product-item` / `a.product-title-lines` / `span.price.main`) but same Gjirafa ToS applies — flag before building further |
+| `neptun_ks` | electronics_tech | ⛔ do not build | robots.txt disallows ClaudeBot specifically |
+| `indomio_al` | real_estate | ❌ | aggressive anti-bot robots.txt — awaiting a decision before inspecting further |
 
 Every ❌ config ships with real URLs/category paths but placeholder selectors
 (`REPLACE_ME`) — run `discover` on an open network to fill them, then `inspect`

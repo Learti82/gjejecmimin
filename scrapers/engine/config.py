@@ -62,6 +62,13 @@ class ScraperConfig:
     default_currency: str = "EUR"
     rate_limit_seconds: float = 2.0  # min gap between requests (spec: >= 2s)
     selectors_verified: bool = False  # gate: refuse scale-run until True
+    # ToS explicitly prohibits automated access (spec section 4: flag, don't
+    # silently proceed, don't assume auto-blocker — the human decides). When
+    # true, `run` refuses unless --acknowledge-tos-risk is passed; `inspect`/
+    # `discover` still print a loud warning but don't block (testing a couple
+    # pages vs. running production scraping are different risk profiles).
+    tos_restricted: bool = False
+    tos_note: str = ""
     notes: str = ""
 
 
@@ -112,6 +119,8 @@ def load_config(path: str) -> ScraperConfig:
         default_currency=raw.get("default_currency", "EUR"),
         rate_limit_seconds=float(raw.get("rate_limit_seconds", 2.0)),
         selectors_verified=bool(raw.get("selectors_verified", False)),
+        tos_restricted=bool(raw.get("tos_restricted", False)),
+        tos_note=raw.get("tos_note", ""),
         notes=raw.get("notes", ""),
     )
 

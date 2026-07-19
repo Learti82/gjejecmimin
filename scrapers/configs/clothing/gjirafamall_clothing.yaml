@@ -9,6 +9,14 @@ rate_limit_seconds: 2.0
 js_rendered: false             # VERIFY (0 rows on inspect + products in browser => true)
 selectors_verified: false
 
+# ⚠️ FLAGGED, NOT YET RESOLVED: same GjirafaMall ToS issue as
+# gjirafamall_fragrances — see that config for the full quote. `run` refuses
+# this config until you decide and pass --acknowledge-tos-risk.
+tos_restricted: true
+tos_note: >
+  GjirafaMall ToS (/conditions-of-use-2) explicitly prohibits automated/bot
+  access and data-extraction tools, company-wide across Gjirafa properties.
+
 start_paths:
   - /veshje                    # clothing (verified via search); confirm on inspect
 

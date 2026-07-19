@@ -11,6 +11,20 @@ rate_limit_seconds: 2.0
 js_rendered: false
 selectors_verified: false      # flip to true after `inspect` looks right
 
+# ⚠️ FLAGGED, NOT YET RESOLVED: GjirafaMall's Terms of Use (/conditions-of-use-2,
+# shared boilerplate across all Gjirafa properties, including Gjirafa50) state
+# users won't access the service "through automated or non-human means, whether
+# via a bot, script or otherwise," and separately ban "use of any data
+# extraction, robots, or similar tools for collecting and extracting data."
+# robots.txt itself is permissive — this is a ToS/contract issue, not a
+# technical block. `run` refuses this config until you decide and pass
+# --acknowledge-tos-risk. See build spec section 4: flag, don't silently
+# proceed, but don't auto-block either — this is your call to make.
+tos_restricted: true
+tos_note: >
+  GjirafaMall ToS (/conditions-of-use-2) explicitly prohibits automated/bot
+  access and data-extraction tools, company-wide across Gjirafa properties.
+
 start_paths:
   - /parfum
   - /aroma-kozmetike

@@ -14,7 +14,7 @@ js_rendered: false
 selectors_verified: false
 
 start_paths:
-  - /Njoftime/Automjete/Pjese-kembimi   # confirm exact slug on first run
+  - /shpallje/makina/autopjese-pajisje   # confirmed live path
 
 pagination:
   mode: query_param
@@ -50,5 +50,8 @@ fields:
     exists: true
 
 notes: >
-  Breadcrumb depth/fields for car parts were NOT verified against live DOM.
-  Inspect the actual category page and correct the indexes before scale runs.
+  Placeholder-price filtering confirmed live: "SHTROJE GOME TOYOTA RAW 4" listed
+  at "1 EUR" — correctly dropped by the price parser (parse_price treats exact
+  value 1 as the no-price placeholder). Breadcrumb depth/fields for THIS
+  category are still not confirmed against the live DOM — inspect the actual
+  category page and correct the indexes before scale runs.

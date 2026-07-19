@@ -6,13 +6,21 @@ base_url: https://gjirafa50.com
 trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
-# TEMPLATE — selectors are placeholders. Before anything:
-#   1. Compare "View Source" vs the rendered DOM to decide js_rendered.
-#   2. Read robots.txt (`robots gjirafa50`) + ToS for anti-scraping language.
-#   3. `inspect gjirafa50 --pages 1`, fill the selectors from real output.
-#   4. Set selectors_verified: true only after the sample looks correct.
-js_rendered: false          # VERIFY — likely a real catalog; confirm rendering
-selectors_verified: false
+# robots.txt is permissive (nopCommerce, only admin/checkout paths blocked).
+# Selectors confirmed live: container .product-item, title
+# a.product-title-lines, price span.price.main / span.price.old-price.
+js_rendered: false
+selectors_verified: false      # confirm with `inspect` before flipping
+
+# ⚠️ FLAGGED, NOT YET RESOLVED: same parent company as GjirafaMall, and its
+# Terms of Use carry the identical boilerplate — explicitly bans automated/bot
+# access and data-extraction tools. `run` refuses this config until you decide
+# and pass --acknowledge-tos-risk. See gjirafamall_fragrances for the full quote.
+tos_restricted: true
+tos_note: >
+  Gjirafa50 shares Gjirafa's company-wide Terms of Use, which explicitly
+  prohibit automated/bot access and data-extraction tools (same clause as
+  GjirafaMall).
 
 start_paths:
   - /                        # replace with an actual category/listing path
@@ -23,20 +31,21 @@ pagination:
   start: 1
   max_pages: 5
 
-listing_selector: "REPLACE_ME"     # product card container
+listing_selector: ".product-item"
 external_id:
-  selector: "REPLACE_ME"           # a stable product id/sku; attr or text
-  attr: null
+  selector: "a.product-title-lines"
+  attr: href
+  regex: "([^/?#]+)/?$"
 fields:
   title:
-    selector: "REPLACE_ME"
+    selector: "a.product-title-lines"
   url:
-    selector: "REPLACE_ME"
+    selector: "a.product-title-lines"
     attr: href
   price:
-    selector: "REPLACE_ME"
-  brand:
-    selector: "REPLACE_ME"
+    selector: "span.price.main:not(.old-price)"
 
 notes: >
-  Discovery target. Do not run at scale until inspected and verified.
+  Selectors confirmed live but not yet run against a real page — confirm with
+  `inspect gjirafa50 --pages 1` (this still works despite tos_restricted; only
+  `run` is gated) before flipping selectors_verified.

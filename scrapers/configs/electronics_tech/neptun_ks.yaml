@@ -6,10 +6,15 @@ base_url: https://www.neptun-ks.com
 trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
-# TEMPLATE. FIRST confirm Neptun actually publishes an online catalog WITH
-# prices (not just a store-locator/marketing site). If it is marketing-only,
-# leave selectors_verified: false, note it, and skip — do not force a scrape.
-js_rendered: false          # VERIFY
+# ⛔ SKIP RECOMMENDED — DO NOT BUILD FURTHER.
+# robots.txt contains an explicit `User-agent: ClaudeBot / Disallow: /` rule
+# (alongside GPTBot, CCBot, Google-Extended, etc.) — a direct site-owner signal
+# against Claude-based access specifically. This engine's own User-Agent is
+# named "GjejeCmiminBot" (not "ClaudeBot"), so a naive robots.txt check would
+# technically report ALLOWED — but the intent of that rule is unambiguous, and
+# it should be honored in spirit, not routed around on a technicality. Left as
+# an unverified template; do not fill in selectors or run this config.
+js_rendered: false
 selectors_verified: false
 
 start_paths:

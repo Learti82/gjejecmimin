@@ -24,6 +24,22 @@ def test_keeps_business_name():
     assert "Golf 7" in out
 
 
+def test_directive_without_a_name_keeps_ordinary_text():
+    # Regression: "kontakt" is common in Kosovo listings ("kontakt për çmim" =
+    # "contact for price") and must NOT swallow the ordinary lowercase words
+    # that follow it as if they were a personal name.
+    out = scrub_personal_data("Shtëpi — kontakt për çmim")
+    assert "për çmim" in out
+    assert "Shtëpi" in out
+
+
+def test_directive_with_actual_name_still_strips_it():
+    out = scrub_personal_data("Shtëpi — kontaktoni Agim Krasniqi")
+    assert "Agim" not in out
+    assert "Krasniqi" not in out
+    assert "Shtëpi" in out
+
+
 def test_none_passthrough():
     assert scrub_personal_data(None) is None
 

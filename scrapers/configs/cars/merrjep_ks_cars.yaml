@@ -12,7 +12,7 @@ js_rendered: false
 selectors_verified: true
 
 start_paths:
-  - /Njoftime/Vetura     # cars category path — confirm exact slug on first run
+  - /shpallje/makina/vetura     # confirmed live path
 
 pagination:
   mode: query_param

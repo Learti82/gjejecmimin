@@ -6,34 +6,41 @@ base_url: https://online.vivafresh.shop
 trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
-# TEMPLATE. This is a real e-commerce catalog, so proper product/price cards
-# should exist. Inspect first; many storefronts are JS-rendered (verify).
+# robots.txt clean (Crawl-delay: 1 — our engine's 2s floor already exceeds
+# this). Real priced catalog confirmed; container/title/price selectors below
+# are confirmed live. No anti-scraping language found.
 js_rendered: false          # VERIFY (compare source vs rendered DOM)
-selectors_verified: false
+selectors_verified: false   # one thing left: a real category/listing URL below
 
 start_paths:
-  - /                        # replace with a real category/listing path
+  - /                        # STILL A PLACEHOLDER — replace with a real
+                              # category/listing path (e.g. a "Produkte" or
+                              # search-results URL), then run `inspect`
 
 pagination:
   mode: query_param
-  param: page
+  param: page                # UNCONFIRMED — verify by paging manually
   start: 1
-  max_pages: 5
+  max_pages: 20
 
-listing_selector: "REPLACE_ME"
+listing_selector: ".product-box"
+
 external_id:
-  selector: "REPLACE_ME"
-  attr: null
+  selector: "a.product-link"
+  attr: href
+  regex: "([^/?#]+)/?$"      # stable id from the product URL's last segment
+
 fields:
   title:
-    selector: "REPLACE_ME"
+    selector: "a.product-link"
   url:
-    selector: "REPLACE_ME"
+    selector: "a.product-link"
     attr: href
   price:
-    selector: "REPLACE_ME"
-  unit:
-    selector: "REPLACE_ME"   # pack size / weight if present
+    selector: ".bigprice"
 
 notes: >
-  Discovery target. Inspect + verify before scale runs.
+  Container/title/price selectors confirmed live (.product-box / a.product-link
+  / .bigprice). Still missing: a real category/listing start_path — replace the
+  "/" placeholder with an actual products URL, then run
+  `inspect vivafresh --pages 1` and confirm before flipping selectors_verified.

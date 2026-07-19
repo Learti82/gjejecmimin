@@ -7,20 +7,27 @@ trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
 js_rendered: false
-# UNVERIFIED breadcrumb: real-estate listings likely carry size/rooms/location
-# rather than brand/model. Inspect before trusting the field mapping below.
-# ALSO: every real-estate price is an ASKING price, never a confirmed sale —
-# that is recorded via price_kind below and must surface in the UI.
+# Container/title/price selectors are the same site-wide (shared with cars,
+# confirmed live). Breadcrumb depth for real estate is CONFIRMED as only 2
+# links (property type, city) — different from cars' 4. robots.txt: Allow: /.
+#
+# Still leaving this false on purpose: run `inspect merrjep_ks_real_estate
+# --pages 1` yourself, confirm the sample rows (esp. property_type/city and a
+# rental showing price_period=muaj), THEN flip this to true. One command away.
 selectors_verified: false
 
+# Lists apartments, houses, and land together in one feed — property_type
+# (from the breadcrumb) tells them apart, so one crawl covers all three and
+# every city; no need for separate per-type or per-city runs.
 start_paths:
-  - /Njoftime/Patundshmeri   # confirm exact slug on first run
+  - /shpallje/patundshmeri     # confirmed live path
 
 pagination:
   mode: query_param
-  param: page
+  param: page          # ASSUMED same scheme as cars — verify by clicking to
+                        # page 2 in your browser and checking the URL matches
   start: 1
-  max_pages: 5
+  max_pages: 50         # raised: you want "everything" — override with --pages
 
 listing_selector: "div.row-listing[data-product-id]"
 
@@ -34,17 +41,19 @@ fields:
     selector: "h2 a.Link_vis"
     attr: href
   price:
-    selector: "p.list-price"
+    selector: "p.list-price"   # often empty; rentals end in "/ muaj"
   price_kind:
-    const: asking_price       # constant tag — real estate is asking price only
-  # Breadcrumb positions UNCONFIRMED — real estate typically: type, location,
-  # (and size/rooms may live elsewhere in the card, not the breadcrumb).
+    const: asking_price        # NEVER a confirmed transaction — sale or rent alike
+  price_period:
+    selector: "p.list-price"
+    regex: "(muaj)"            # present => rental (per month); absent => one-time sale
+  # CONFIRMED live: real-estate breadcrumb is only 2 links, unlike cars' 4.
   property_type:
     selector: "div.title > a.link-html.nobold"
-    index: 1
+    index: 0
   city:
     selector: "div.title > a.link-html.nobold"
-    index: 2
+    index: -1        # last breadcrumb link = city (robust even if depth changes)
   is_dealer:
     selector: "span.label.label-default.isstore"
     exists: true
@@ -53,6 +62,10 @@ fields:
     exists: true
 
 notes: >
-  Label ALL real-estate prices as asking price (price_kind=asking_price), never
-  as a confirmed transaction. Verify breadcrumb + where size/rooms actually live
-  in the card DOM before scale runs.
+  One crawl of /shpallje/patundshmeri returns apartments, houses, and land for
+  every city at once; slice by attributes.property_type and city afterward —
+  do not run this once per city. Rentals are detected via "/ muaj" in the price
+  text (attributes.price_period == "muaj"); sales leave price_period unset. All
+  prices are asking prices, never confirmed transactions (attributes.price_kind
+  == "asking_price"), rent or sale alike. Pagination param is assumed, not
+  independently reconfirmed — verify before a very large run.
