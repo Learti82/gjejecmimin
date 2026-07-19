@@ -25,7 +25,7 @@ pagination:
   mode: query_param
   param: page                  # VERIFY
   start: 1
-  max_pages: 5
+  max_pages: 30
 
 # TO FILL via `discover gjirafamall_furniture`:
 listing_selector: "REPLACE_ME"

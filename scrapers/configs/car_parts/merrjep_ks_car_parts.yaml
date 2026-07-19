@@ -20,7 +20,7 @@ pagination:
   mode: query_param
   param: page
   start: 1
-  max_pages: 5
+  max_pages: 30
 
 listing_selector: "div.row-listing[data-product-id]"
 

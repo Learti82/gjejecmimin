@@ -11,10 +11,10 @@ js_rendered: false
 # confirmed live). Breadcrumb depth for real estate is CONFIRMED as only 2
 # links (property type, city) — different from cars' 4. robots.txt: Allow: /.
 #
-# Still leaving this false on purpose: run `inspect merrjep_ks_real_estate
-# --pages 1` yourself, confirm the sample rows (esp. property_type/city and a
-# rental showing price_period=muaj), THEN flip this to true. One command away.
-selectors_verified: false
+# VERIFIED: live `inspect` run returned 55 clean records — sales vs. rentals
+# correctly split via price_period, property_type/city correctly extracted
+# from the breadcrumb, empty prices correctly handled.
+selectors_verified: true
 
 # Lists apartments, houses, and land together in one feed — property_type
 # (from the breadcrumb) tells them apart, so one crawl covers all three and

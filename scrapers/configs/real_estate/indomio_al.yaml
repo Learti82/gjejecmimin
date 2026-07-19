@@ -18,7 +18,7 @@ pagination:
   mode: query_param
   param: pag                 # VERIFY the real pagination param
   start: 1
-  max_pages: 5
+  max_pages: 30
 
 listing_selector: "REPLACE_ME"
 external_id:

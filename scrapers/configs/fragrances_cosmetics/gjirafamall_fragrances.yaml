@@ -33,7 +33,7 @@ pagination:
   mode: query_param
   param: page                  # VERIFY: open page 2 in a browser and read the URL
   start: 1
-  max_pages: 5
+  max_pages: 30
 
 listing_selector: "section.details.flex.flex-col.h-full.justify-end.pb-2"
 

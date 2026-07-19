@@ -17,7 +17,7 @@ pagination:
   mode: query_param
   param: page                  # VERIFY (Foleja may use a path-based pager)
   start: 1
-  max_pages: 5
+  max_pages: 30
 
 # TO FILL via `discover foleja_fragrances`:
 listing_selector: "REPLACE_ME"
