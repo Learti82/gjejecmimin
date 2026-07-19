@@ -6,12 +6,11 @@ base_url: https://www.foleja.com
 trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
-js_rendered: false             # VERIFY
-selectors_verified: false
+js_rendered: false      # confirmed: plain requests found 48 real product cards
+selectors_verified: false      # one more `inspect` run, then flip this to true
 
-# Foleja uses hierarchical category paths. Fragrances live here (via search):
 start_paths:
-  - /Kozmetike-Kujdesi-Personal/Parfum/
+  - /Kozmetike-Kujdesi-Personal/Parfum/    # confirmed live: 48 products found
 
 pagination:
   mode: query_param
@@ -19,22 +18,38 @@ pagination:
   start: 1
   max_pages: 30
 
-# TO FILL via `discover foleja_fragrances`:
-listing_selector: "REPLACE_ME"
+# From a live discover run.
+listing_selector: "div.product-info"
+
+# The URL is https://www.foleja.com/YLL-200014008/Eau-de-Parfum — the FIRST
+# path segment (YLL-200014008) is the real SKU; the trailing segment is just a
+# generic name-based slug that different products could share. Capture the
+# SKU, not the last segment.
 external_id:
-  selector: "REPLACE_ME"
-  attr: null
+  selector: "a.product-name"
+  attr: href
+  regex: "foleja\\.com/([^/?#]+)"
+
 fields:
   title:
-    selector: "REPLACE_ME"
+    selector: "a.product-name"
   url:
-    selector: "REPLACE_ME"
+    selector: "a.product-name"
     attr: href
+  # ⚠️ UNCERTAIN — discover found TWO different price-looking selectors on the
+  # page in equal counts (24 each out of 48 cards): span.whole-original-price
+  # and span.list-price-price. This usually means "on sale" cards show a
+  # struck-through original price PLUS the current price, while regular cards
+  # show only one. Best guess: list-price-price is the price the customer
+  # actually pays (whole-original-price sounds like the pre-discount
+  # reference). CONFIRM this by opening a product on the site yourself and
+  # checking which number matches what's shown as the real price — then run
+  # `inspect foleja_fragrances --pages 1` and check the sample prices look
+  # sane before trusting this.
   price:
-    selector: "REPLACE_ME"
-  brand:
-    selector: "REPLACE_ME"
+    selector: "span.list-price-price"
 
 notes: >
   Foleja also sells electronics/appliances — separate configs per category if
-  you add those. Confirm pagination style (query param vs path). Check robots/ToS.
+  you add those. Price selector needs a visual double-check (see comment
+  above) before flipping selectors_verified.

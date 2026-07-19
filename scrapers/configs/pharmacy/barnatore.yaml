@@ -7,16 +7,14 @@ trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
 # robots.txt clean (Allow: /). ToS page short, no anti-scraping language found.
-# CONFIRMED JS-rendered: shows a loading spinner before content appears —
-# plain requests would only ever see the empty shell. Needs Playwright:
-#   pip install playwright
-#   playwright install chromium
+# CONFIRMED JS-rendered — a live `discover` run through headless Chromium
+# found 35 real products at /shop, proving the URL and the rendering approach.
 js_rendered: true
-selectors_verified: false      # confirm with `inspect` before flipping
+selectors_verified: false      # one more `inspect` run with these fixed
+                                # selectors, then flip this to true
 
 start_paths:
-  - /shop     # from search discovery ("Blej | Barnatore Online" -> /shop) —
-              # CONFIRM this is the real product-listing path on first inspect
+  - /shop     # confirmed live: 35 products found here
 
 pagination:
   mode: query_param
@@ -24,28 +22,30 @@ pagination:
   start: 1
   max_pages: 20
 
-listing_selector: ".single_product"
+# CORRECTED from a live discover run — the earlier .single_product guess was
+# wrong; the real container is figcaption.product_content.
+listing_selector: "figcaption.product_content"
 
+# The card has TWO <a> tags: the real product link, and a "+ Shto në shportë"
+# (add to cart) button with href="#" — target only the product link.
 external_id:
-  selector: "a"          # a stable id — refine after `discover`/`inspect`
-                          # shows the card's real link/attrs (see notes)
+  selector: "a[href*='product-details']"
   attr: href
-  regex: "([^/?#]+)/?$"
+  regex: "product=([^&]+)"     # e.g. "nicorette-fresh-mint-4-mg-"
 
 fields:
   title:
-    selector: ".product_name"
+    selector: "h4.product_name"
   url:
-    selector: "a"
+    selector: "a[href*='product-details']"
     attr: href
   price:
-    selector: ".current_price"   # NOT .old_price — that's the pre-discount strikethrough
+    selector: "span.current_price"   # span.old_price is the pre-discount strikethrough
 
 notes: >
-  Confirmed live selectors: container .single_product, title .product_name,
-  price .current_price (.old_price is the strikethrough pre-discount price —
-  do not use it). JS-rendered, so `inspect`/`run` will automatically use the
-  headless-browser client (js_rendered: true). Still need: confirm /shop is
-  the real listing path, and pin down the exact id/link selector inside
-  .single_product — run `discover barnatore` (it now works through
-  JS-rendered pages too) to get the card anatomy, then fill external_id.
+  Live discover run at /shop found: container figcaption.product_content
+  (x35), title h4.product_name, price span.current_price (span.old_price on
+  ~3/35 cards is the strikethrough pre-discount price, correctly not used).
+  JS-rendered — inspect/run automatically use browser_client.py. Run
+  `inspect barnatore --pages 1` to confirm titles/prices look right before
+  flipping selectors_verified.

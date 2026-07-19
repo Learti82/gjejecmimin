@@ -1,0 +1,25 @@
+<!--
+  Foleja fragrances card markup, reconstructed from a live discover run:
+  container div.product-info, title/link a.product-name, price ambiguity
+  between span.whole-original-price (guessed: pre-discount reference) and
+  span.list-price-price (guessed: actual selling price) — see the config's
+  note. This fixture exercises the current best-guess selector.
+-->
+<html><body>
+<div class="products grid">
+
+  <div class="product-info">
+    <a class="product-name" href="https://www.foleja.com/YLL-200014008/Eau-de-Parfum">Eau de Parfum Ministry of Oud Greatest 100ml unisex</a>
+    <div class="product-box-rating-name">Eau de Parfum Ministry of Oud Greatest 100ml unisex</div>
+    <span class="list-price-price">39.99 €</span>
+  </div>
+
+  <div class="product-info">
+    <a class="product-name" href="https://www.foleja.com/YLL-200014020/Eau-de-Parfum-2">Eau de Parfum Lattafa Asad 100ml</a>
+    <div class="product-box-rating-name">Eau de Parfum Lattafa Asad 100ml</div>
+    <span class="whole-original-price d-flex">45.00 €</span>
+    <span class="list-price-price">32.99 €</span>
+  </div>
+
+</div>
+</body></html>
