@@ -7,15 +7,19 @@ trust_tier: verified_retailer
 default_currency: EUR
 rate_limit_seconds: 2.0
 # robots.txt clean (Crawl-delay: 1 — our engine's 2s floor already exceeds
-# this). Real priced catalog confirmed; container/title/price selectors below
-# are confirmed live. No anti-scraping language found.
-js_rendered: false          # VERIFY (compare source vs rendered DOM)
-selectors_verified: false   # one thing left: a real category/listing URL below
+# this). No anti-scraping language found.
+#
+# CONFIRMED JS-rendered: two different plain-request fetches (homepage and
+# /categories) both returned only the same empty cart-icon shell — the real
+# categories/products are injected client-side after load, same pattern as
+# Barnatore. Needs the headless-browser client (automatic once this is true).
+js_rendered: true
+selectors_verified: false   # confirm with `discover`/`inspect` through the
+                             # browser client, then flip this to true
 
 start_paths:
-  - /                        # STILL A PLACEHOLDER — replace with a real
-                              # category/listing path (e.g. a "Produkte" or
-                              # search-results URL), then run `inspect`
+  - /categories              # best current guess — confirm via a browser-rendered
+                              # `discover` run; may need a deeper category URL
 
 pagination:
   mode: query_param
@@ -40,7 +44,10 @@ fields:
     selector: ".bigprice"
 
 notes: >
-  Container/title/price selectors confirmed live (.product-box / a.product-link
-  / .bigprice). Still missing: a real category/listing start_path — replace the
-  "/" placeholder with an actual products URL, then run
-  `inspect vivafresh --pages 1` and confirm before flipping selectors_verified.
+  Container/title/price selectors (.product-box / a.product-link / .bigprice)
+  are from earlier documentation, NOT yet independently confirmed against
+  actual rendered content — two plain-request fetches only ever saw the empty
+  shell, so they've never been tested against real product markup. Run
+  `discover vivafresh` (now goes through headless Chromium automatically) to
+  get a live card anatomy and correct these if needed, then
+  `inspect vivafresh --pages 1` before flipping selectors_verified.
