@@ -7,10 +7,13 @@ PyYAML>=6.0
 # Tests
 pytest>=8.0
 
-# Optional: only needed to write the Postgres/Supabase staging table
-# (engine/storage.write_postgres). The JSONL path needs none of this.
+# Optional: only needed to (a) write the Postgres/Supabase staging table
+# (engine/storage.write_postgres --dsn) or (b) run promote.py, which pushes
+# clean scraped rows into the live site's tables. The JSONL/CSV output path
+# needs neither.
 # psycopg[binary]>=3.1
 
-# Optional: only needed for JS-rendered sites (configs with js_rendered: true).
-# A headless-browser fetcher is not included in the default engine.
+# Optional: only needed for JS-rendered sites (configs with js_rendered: true,
+# e.g. barnatore). After `pip install playwright`, also run once:
+#   playwright install chromium
 # playwright>=1.44

@@ -1,0 +1,51 @@
+id: barnatore
+site: Barnatore Online (Kosovo pharmacy)
+category: pharmacy
+country: XK
+base_url: https://www.barnatoreonline-ks.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+# robots.txt clean (Allow: /). ToS page short, no anti-scraping language found.
+# CONFIRMED JS-rendered: shows a loading spinner before content appears —
+# plain requests would only ever see the empty shell. Needs Playwright:
+#   pip install playwright
+#   playwright install chromium
+js_rendered: true
+selectors_verified: false      # confirm with `inspect` before flipping
+
+start_paths:
+  - /shop     # from search discovery ("Blej | Barnatore Online" -> /shop) —
+              # CONFIRM this is the real product-listing path on first inspect
+
+pagination:
+  mode: query_param
+  param: page      # UNCONFIRMED — verify by paging manually
+  start: 1
+  max_pages: 20
+
+listing_selector: ".single_product"
+
+external_id:
+  selector: "a"          # a stable id — refine after `discover`/`inspect`
+                          # shows the card's real link/attrs (see notes)
+  attr: href
+  regex: "([^/?#]+)/?$"
+
+fields:
+  title:
+    selector: ".product_name"
+  url:
+    selector: "a"
+    attr: href
+  price:
+    selector: ".current_price"   # NOT .old_price — that's the pre-discount strikethrough
+
+notes: >
+  Confirmed live selectors: container .single_product, title .product_name,
+  price .current_price (.old_price is the strikethrough pre-discount price —
+  do not use it). JS-rendered, so `inspect`/`run` will automatically use the
+  headless-browser client (js_rendered: true). Still need: confirm /shop is
+  the real listing path, and pin down the exact id/link selector inside
+  .single_product — run `discover barnatore` (it now works through
+  JS-rendered pages too) to get the card anatomy, then fill external_id.

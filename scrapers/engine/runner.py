@@ -37,6 +37,17 @@ from validation.benchmark_check import run_benchmark  # noqa: E402
 CONFIG_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "configs")
 
 
+def _make_client(cfg: ScraperConfig):
+    """Pick the plain HTTP client or the headless-browser client based on the
+    config's js_rendered flag — same .get()/.allowed() interface either way,
+    so callers don't need to know which one they got."""
+    if cfg.js_rendered:
+        from engine.browser_client import BrowserHttpClient
+
+        return BrowserHttpClient(rate_limit_seconds=cfg.rate_limit_seconds)
+    return HttpClient(rate_limit_seconds=cfg.rate_limit_seconds)
+
+
 def _find_config(name: str) -> str:
     if os.path.isfile(name):
         return name
@@ -84,6 +95,8 @@ def _print_sample(records: list[Listing], limit: int) -> None:
 
 def cmd_robots(args: argparse.Namespace) -> None:
     cfg = load_config(_find_config(args.config))
+    # robots.txt itself is always plain text — no need for a browser here even
+    # if the config is js_rendered.
     client = HttpClient(rate_limit_seconds=cfg.rate_limit_seconds)
     print(f"robots.txt check for {cfg.site} ({cfg.id})")
     for path in cfg.start_paths:
@@ -123,20 +136,26 @@ def cmd_inspect(args: argparse.Namespace) -> None:
         print("(inspected from local fixture — no network used)")
         return
 
-    client = HttpClient(rate_limit_seconds=cfg.rate_limit_seconds)
+    client = _make_client(cfg)
+    if cfg.js_rendered:
+        print("(js_rendered: true — using headless Chromium via Playwright)")
     all_records: list[Listing] = []
     pages = max(1, min(args.pages, 2))  # inspect touches at most 2 pages
-    for path in cfg.start_paths[:1]:
-        for url in page_urls(cfg, path, max_pages=pages):
-            try:
-                html = client.get(url)
-            except DisallowedByRobots:
-                print(f"  robots.txt disallows {url} — skipping")
-                continue
-            if not html:
-                print(f"  failed to fetch {url}")
-                continue
-            all_records.extend(records_from_html(cfg, html))
+    try:
+        for path in cfg.start_paths[:1]:
+            for url in page_urls(cfg, path, max_pages=pages):
+                try:
+                    html = client.get(url)
+                except DisallowedByRobots:
+                    print(f"  robots.txt disallows {url} — skipping")
+                    continue
+                if not html:
+                    print(f"  failed to fetch {url}")
+                    continue
+                all_records.extend(records_from_html(cfg, html))
+    finally:
+        if hasattr(client, "close"):
+            client.close()
     _print_sample(dedup(all_records), args.limit)
 
 
@@ -156,9 +175,20 @@ def cmd_discover(args: argparse.Namespace) -> None:
     if not args.url and not cfg:
         raise SystemExit("Provide --url, or a config name, or --fixture.")
     url = args.url or (cfg.base_url + cfg.start_paths[0])
+    js_rendered = args.js or (cfg.js_rendered if cfg else False)
     rate = cfg.rate_limit_seconds if cfg else 2.0
-    client = HttpClient(rate_limit_seconds=rate)
-    html = client.get(url)
+    if js_rendered:
+        from engine.browser_client import BrowserHttpClient
+
+        client = BrowserHttpClient(rate_limit_seconds=rate)
+        print("(js_rendered — using headless Chromium via Playwright)")
+    else:
+        client = HttpClient(rate_limit_seconds=rate)
+    try:
+        html = client.get(url)
+    finally:
+        if hasattr(client, "close"):
+            client.close()
     if not html:
         raise SystemExit(f"Could not fetch {url}")
     print(f"# {url}\n")
@@ -181,28 +211,30 @@ def cmd_run(args: argparse.Namespace) -> None:
             f"This is flagged for your decision, not an automatic block. If you have "
             f"decided to proceed anyway, re-run with --acknowledge-tos-risk."
         )
+    client = _make_client(cfg)
     if cfg.js_rendered:
-        print("WARNING: config marks the site JS-rendered; the requests-based "
-              "engine may see an empty DOM. Use a headless-browser fetcher.")
-
-    client = HttpClient(rate_limit_seconds=cfg.rate_limit_seconds)
+        print("(js_rendered: true — using headless Chromium via Playwright)")
     all_records: list[Listing] = []
-    for path in cfg.start_paths:
-        for url in page_urls(cfg, path, max_pages=args.pages):
-            verdict = client.allowed(url)
-            if verdict is False:
-                print(f"  robots disallows {url} — skipping")
-                continue
-            if verdict is None and not args.allow_unknown_robots:
-                print(f"  robots.txt unreachable for {url} — skipping (use "
-                      f"--allow-unknown-robots to override)")
-                continue
-            try:
-                html = client.get(url)
-            except DisallowedByRobots:
-                continue
-            if html:
-                all_records.extend(records_from_html(cfg, html))
+    try:
+        for path in cfg.start_paths:
+            for url in page_urls(cfg, path, max_pages=args.pages):
+                verdict = client.allowed(url)
+                if verdict is False:
+                    print(f"  robots disallows {url} — skipping")
+                    continue
+                if verdict is None and not args.allow_unknown_robots:
+                    print(f"  robots.txt unreachable for {url} — skipping (use "
+                          f"--allow-unknown-robots to override)")
+                    continue
+                try:
+                    html = client.get(url)
+                except DisallowedByRobots:
+                    continue
+                if html:
+                    all_records.extend(records_from_html(cfg, html))
+    finally:
+        if hasattr(client, "close"):
+            client.close()
 
     records = dedup(all_records)
 
@@ -210,13 +242,21 @@ def cmd_run(args: argparse.Namespace) -> None:
     summary = run_benchmark(records)
     print(f"benchmark: {summary}")
 
+    # Always write a local, downloadable file (JSONL + CSV) — even when also
+    # pushing to a database — so there's always a copy you can open/share.
     out = args.out or os.path.join("scrapers", "output", f"{cfg.id}.jsonl")
+    n = storage.write_jsonl(records, out)
+    print(f"wrote {n} rows to {out}")
+    if not args.no_csv:
+        from engine.to_csv import jsonl_to_csv
+
+        csv_path = jsonl_to_csv(out)
+        print(f"wrote {csv_path} (open in Excel/Sheets)")
+
     if args.dsn:
-        n = storage.write_postgres(records, args.dsn)
-        print(f"wrote {n} rows to Postgres staging (scraped_listings)")
-    else:
-        n = storage.write_jsonl(records, out)
-        print(f"wrote {n} rows to {out}")
+        n_db = storage.write_postgres(records, args.dsn)
+        print(f"also wrote {n_db} rows to Postgres staging (scraped_listings)")
+
     if summary["held_for_review"]:
         print(f"NOTE: {summary['held_for_review']} row(s) held for manual review "
               f"(review_flags set) — do not publish these automatically.")
@@ -236,6 +276,9 @@ def build_parser() -> argparse.ArgumentParser:
     pd.add_argument("config", nargs="?", help="optional config (uses its first start URL)")
     pd.add_argument("--url", help="page URL to analyze")
     pd.add_argument("--fixture", help="analyze a saved HTML file instead of the network")
+    pd.add_argument("--js", action="store_true",
+                    help="render with headless Chromium (needed with --url when no "
+                         "config is given and the site is JS-rendered)")
     pd.set_defaults(func=cmd_discover)
 
     pi = sub.add_parser("inspect", help="fetch 1-2 pages (or --fixture) and show a sample")
@@ -249,7 +292,10 @@ def build_parser() -> argparse.ArgumentParser:
     prun.add_argument("config")
     prun.add_argument("--pages", type=int, default=5)
     prun.add_argument("--out", help="JSONL output path")
-    prun.add_argument("--dsn", help="Postgres DSN to write staging table instead of JSONL")
+    prun.add_argument("--dsn", help="also write to Postgres staging (scraped_listings) "
+                                     "in addition to the local JSONL/CSV file")
+    prun.add_argument("--no-csv", action="store_true",
+                      help="skip writing the .csv alongside the .jsonl")
     prun.add_argument("--allow-unverified", action="store_true",
                       help="run even if selectors_verified is false (dangerous)")
     prun.add_argument("--acknowledge-tos-risk", action="store_true",
