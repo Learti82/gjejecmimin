@@ -105,95 +105,146 @@ def _read_rows(paths: list[str]) -> list[dict]:
     return rows
 
 
+def _chunks(seq: list, size: int):
+    for i in range(0, len(seq), size):
+        yield seq[i : i + size]
+
+
+def _s(value) -> str:
+    """Coerce a DB text value to str. Most drivers return str for text columns,
+    but some encodings return bytes — normalize so dict keys match reliably."""
+    if isinstance(value, (bytes, bytearray)):
+        return value.decode("utf-8", "replace")
+    return value
+
+
 def promote(paths: list[str], dsn: str, dry_run: bool = False) -> PromoteStats:
+    """Batch-promote scraped rows into canonical_products + price_observations.
+
+    Batched on purpose: the whole job runs as a handful of set-based SQL
+    statements instead of one round-trip per listing, so tens of thousands of
+    rows complete in seconds even over a remote (pooler) connection.
+    """
     import psycopg
 
     stats = PromoteStats()
     rows = _read_rows(paths)
+    stats.read = len(rows)
 
-    # Caches so repeated products/stores in one run hit the DB once, not N times.
-    product_cache: dict[str, str] = {}   # canonical_name -> product_id
-    store_cache: dict[tuple[str, Optional[str]], Optional[str]] = {}  # (name, city) -> store_id
+    # ---- filter + normalize once, in Python (no DB) ----
+    usable: list[dict] = []
+    for row in rows:
+        if row.get("price") is None:
+            stats.skipped_no_price += 1
+            continue
+        if row.get("review_flags"):
+            stats.skipped_review += 1
+            continue
+        title = (row.get("title") or "").strip()
+        if not title:
+            continue
+        row["_canonical"] = normalize_name(title)
+        usable.append(row)
+
+    if not usable:
+        return stats
+
+    # First occurrence of each canonical_name defines the product row.
+    products: dict[str, tuple] = {}
+    for row in usable:
+        cn = row["_canonical"]
+        if cn not in products:
+            attrs = row.get("attributes") or {}
+            products[cn] = (row["title"].strip(), cn, row["category"],
+                            attrs.get("brand"), attrs.get("unit"))
+    canonical_names = list(products.keys())
 
     conn = psycopg.connect(dsn)
     try:
         with conn.cursor() as cur:
-            for row in rows:
-                stats.read += 1
+            # ---- canonical_products: which already exist? ----
+            existing_products: set[str] = set()
+            for chunk in _chunks(canonical_names, 1000):
+                cur.execute(
+                    "select canonical_name from canonical_products "
+                    "where canonical_name = any(%s)",
+                    (chunk,),
+                )
+                existing_products.update(_s(r[0]) for r in cur.fetchall())
+            new_products = [products[cn] for cn in canonical_names
+                            if cn not in existing_products]
+            stats.products_created = len(new_products)
 
-                if row.get("price") is None:
-                    stats.skipped_no_price += 1
-                    continue
-                if row.get("review_flags"):
-                    stats.skipped_review += 1
-                    continue
+            if not dry_run and new_products:
+                cur.executemany(
+                    "insert into canonical_products "
+                    "(name, canonical_name, category, brand, unit) "
+                    "values (%s, %s, %s, %s, %s) "
+                    "on conflict (canonical_name) do nothing",
+                    new_products,
+                )
 
-                title = (row.get("title") or "").strip()
-                if not title:
-                    continue
-                canonical_name = normalize_name(title)
-
-                attrs = row.get("attributes") or {}
-                category = row["category"]
-                brand = attrs.get("brand")
-                unit = attrs.get("unit")
-
-                # --- canonical_products (find or create) ---
-                product_id = product_cache.get(canonical_name)
-                if product_id is None:
+            # ---- map canonical_name -> product id (for observation FKs) ----
+            product_id: dict[str, str] = {}
+            if not dry_run:
+                for chunk in _chunks(canonical_names, 1000):
                     cur.execute(
-                        "select id from canonical_products where canonical_name = %s",
-                        (canonical_name,),
+                        "select id, canonical_name from canonical_products "
+                        "where canonical_name = any(%s)",
+                        (chunk,),
                     )
-                    hit = cur.fetchone()
-                    if hit:
-                        product_id = str(hit[0])
+                    for pid, cn in cur.fetchall():
+                        product_id[_s(cn)] = str(pid)
+
+            # ---- stores: only single-catalog sources; usually 0 for MerrJep ----
+            store_id_by_source: dict[str, Optional[str]] = {}
+            catalog_sources = {
+                row["source"]: row["category"]
+                for row in usable
+                if not is_marketplace_source(row["source"])
+            }
+            for source, category in catalog_sources.items():
+                name = store_name_for(source)
+                cur.execute("select id from stores where name = %s and city is null", (name,))
+                hit = cur.fetchone()
+                if hit:
+                    store_id_by_source[source] = str(hit[0])
+                else:
+                    stats.stores_created += 1
+                    if dry_run:
+                        store_id_by_source[source] = None
                     else:
-                        if dry_run:
-                            product_id = f"dry-run-product:{canonical_name}"
-                        else:
-                            cur.execute(
-                                """insert into canonical_products
-                                   (name, canonical_name, category, brand, unit)
-                                   values (%s, %s, %s, %s, %s)
-                                   returning id""",
-                                (title, canonical_name, category, brand, unit),
-                            )
-                            product_id = str(cur.fetchone()[0])
-                        stats.products_created += 1
-                    product_cache[canonical_name] = product_id
-
-                # --- stores (marketplace listings get no fixed store) ---
-                source = row["source"]
-                store_id: Optional[str] = None
-                if not is_marketplace_source(source):
-                    store_name = store_name_for(source)
-                    store_key = (store_name, None)
-                    if store_key not in store_cache:
                         cur.execute(
-                            "select id from stores where name = %s and city is null",
-                            (store_name,),
+                            "insert into stores (name, category, verified) "
+                            "values (%s, %s, true) returning id",
+                            (name, category),
                         )
-                        hit = cur.fetchone()
-                        if hit:
-                            store_cache[store_key] = str(hit[0])
-                        else:
-                            if dry_run:
-                                store_cache[store_key] = f"dry-run-store:{store_name}"
-                            else:
-                                cur.execute(
-                                    """insert into stores (name, category, verified)
-                                       values (%s, %s, true) returning id""",
-                                    (store_name, category),
-                                )
-                                store_cache[store_key] = str(cur.fetchone()[0])
-                            stats.stores_created += 1
-                    store_id = store_cache[store_key]
+                        store_id_by_source[source] = str(cur.fetchone()[0])
 
-                # --- price_observations (the fact row the UI reads) ---
+            # ---- price_observations ----
+            all_source_ids = [f"{r['source']}:{r['external_id']}" for r in usable]
+            existing_obs: set[str] = set()
+            for chunk in _chunks(all_source_ids, 1000):
+                cur.execute(
+                    "select source_id from price_observations where source_id = any(%s)",
+                    (chunk,),
+                )
+                existing_obs.update(_s(r[0]) for r in cur.fetchall())
+
+            obs_params: list[tuple] = []
+            for row in usable:
+                source = row["source"]
                 source_id = f"{source}:{row['external_id']}"
-                params = (
-                    product_id,
+                if source_id in existing_obs:
+                    stats.observations_deduped += 1
+                    continue
+                stats.observations_inserted += 1
+                if dry_run:
+                    continue
+                store_id = None if is_marketplace_source(source) \
+                    else store_id_by_source.get(source)
+                obs_params.append((
+                    product_id[row["_canonical"]],
                     store_id,
                     row["price"],
                     row.get("currency") or "EUR",
@@ -203,33 +254,18 @@ def promote(paths: list[str], dsn: str, dry_run: bool = False) -> PromoteStats:
                     row.get("city"),
                     row.get("region"),
                     row.get("raw_source_text"),
-                )
-                if dry_run:
-                    cur.execute(
-                        "select 1 from price_observations "
-                        "where source_id = %s and observed_at = %s",
-                        (source_id, row["scraped_at"]),
-                    )
-                    if cur.fetchone() is not None:
-                        stats.observations_deduped += 1
-                    else:
-                        stats.observations_inserted += 1
-                    continue
+                ))
 
-                cur.execute(
-                    """insert into price_observations
-                         (product_id, store_id, price, currency, observed_at,
-                          trust_tier, source_id, geo_city, geo_region, raw_source_text)
-                       values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                       on conflict (source_id, observed_at) where source_id is not null
-                       do nothing
-                       returning id""",
-                    params,
+            if not dry_run and obs_params:
+                cur.executemany(
+                    "insert into price_observations "
+                    "(product_id, store_id, price, currency, observed_at, "
+                    " trust_tier, source_id, geo_city, geo_region, raw_source_text) "
+                    "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                    "on conflict (source_id, observed_at) where source_id is not null "
+                    "do nothing",
+                    obs_params,
                 )
-                if cur.fetchone() is not None:
-                    stats.observations_inserted += 1
-                else:
-                    stats.observations_deduped += 1
 
         if not dry_run:
             conn.commit()
