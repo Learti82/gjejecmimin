@@ -41,13 +41,38 @@ LOW_CONFIDENCE_THRESHOLD = 3
 
 def _read_rows(paths: list[str]) -> list[dict]:
     rows: list[dict] = []
+    matched_any = False
     for pattern in paths:
-        for path in sorted(glob.glob(pattern)) or [pattern]:
+        matches = sorted(glob.glob(pattern))
+        if not matches:
+            continue
+        matched_any = True
+        for path in matches:
             with open(path, "r", encoding="utf-8") as fh:
                 for line in fh:
                     line = line.strip()
                     if line:
                         rows.append(json.loads(line))
+
+    if not matched_any:
+        import os
+
+        wanted = ", ".join(paths)
+        available = []
+        out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+        if os.path.isdir(out_dir):
+            available = [f for f in sorted(os.listdir(out_dir)) if f.endswith(".jsonl")]
+        msg = [f"No data files matched: {wanted}"]
+        if available:
+            msg.append("Available scraped files in output/:")
+            msg += [f"  output/{f}" for f in available]
+        else:
+            msg.append("The output/ folder has no .jsonl files yet.")
+        msg.append("")
+        msg.append("You need to RUN the scrape before the report can read it, e.g.:")
+        msg.append("  python engine/runner.py run merrjep_ks_apartments --pages 100")
+        raise SystemExit("\n".join(msg))
+
     return rows
 
 
