@@ -32,7 +32,9 @@ scrapers/
   configs/<category>/*.yaml   # one file per site, grouped by category
   official_data_importers/    # ASK / INSTAT / fuel — public data, not scraping
   validation/benchmark_check.py  # outlier + official-index divergence checks
+  analysis/neighborhoods.py    # best-effort neighborhood tagging from titles
   promote.py                   # staging/JSONL -> live site tables (no scraping)
+  report.py                    # group + average prices (by type/city/neighborhood)
   tests/                      # offline tests + fixtures per site
 ```
 
@@ -129,6 +131,41 @@ external website, only your own database.
   group, a price > 3× or < ⅓ of the median is **held for manual review**
   (`review_flags` set), not shown automatically. Optionally compares the scraped
   price trend against the ASK/INSTAT official index and flags wild divergence.
+
+## Reports: group + average prices
+
+```bash
+python report.py output/merrjep_ks_real_estate.jsonl
+python report.py "output/merrjep_ks_*.jsonl" --out report.csv   # all MerrJep categories, + a CSV
+```
+
+Groups listings and prints count/min/avg/median/max per group, plus writes a
+CSV if `--out` is given. Grouping is category-aware:
+
+- **real_estate**: property type + sale-vs-rent + city + best-effort
+  neighborhood (see below)
+- **cars**: brand + model + city
+- **car_parts**: city only (there's no reliable "type of part" field —
+  see that config's notes)
+
+Groups with fewer than 3 priced listings are shown but flagged
+`low_confidence` — an "average" of one or two listings isn't meaningful.
+Rows with no price, or held for review by the benchmark check, are excluded.
+
+**Neighborhood/street breakdown — read this before trusting it:** MerrJep's
+search-result cards only expose **city**, not street or neighborhood — there
+is no structured field for it. `analysis/neighborhoods.py` scans listing
+**titles** for ~25 known Prishtina-area neighborhood names (Arbëria/Dragodan,
+Dardania, Ulpianë, Mati 1/2/3, ...) as a best-effort heuristic: a listing only
+gets tagged if its title happens to mention a recognized name, spelled a
+recognized way. Untagged listings show as `(area not specified)` rather than
+a guess. One entry ("Qendër") is a genuinely ambiguous word — it's both a real
+district name and the generic Albanian word for "downtown/center", so that
+bucket may mix both meanings. Treat neighborhood results as directional, not
+authoritative. A true, reliable street-level breakdown would require visiting
+each listing's own detail page (MerrJep's search cards don't carry it) — a
+bigger, slower scrape than this repo currently does; ask if you want that
+built.
 
 ## Official data (not scraping)
 
