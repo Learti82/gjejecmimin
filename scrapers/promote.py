@@ -82,10 +82,18 @@ def normalize_name(title: str) -> str:
     return slug or "item"
 
 
+# price_observations.price is numeric(12,2): max absolute value < 10^10. Any
+# scraped price at/above this is junk (a mistyped/mangled listing, a phone
+# number parsed as a price, a troll entry) — no real property or car is worth
+# 10 billion EUR — so we skip it rather than let one bad row abort the insert.
+MAX_PRICE = 10 ** 10
+
+
 @dataclass
 class PromoteStats:
     read: int = 0
     skipped_no_price: int = 0
+    skipped_bad_price: int = 0
     skipped_review: int = 0
     products_created: int = 0
     stores_created: int = 0
@@ -134,8 +142,12 @@ def promote(paths: list[str], dsn: str, dry_run: bool = False) -> PromoteStats:
     # ---- filter + normalize once, in Python (no DB) ----
     usable: list[dict] = []
     for row in rows:
-        if row.get("price") is None:
+        price = row.get("price")
+        if price is None:
             stats.skipped_no_price += 1
+            continue
+        if price < 0 or price >= MAX_PRICE:
+            stats.skipped_bad_price += 1  # junk value the DB column can't hold
             continue
         if row.get("review_flags"):
             stats.skipped_review += 1
@@ -288,6 +300,7 @@ def main(argv=None) -> None:
     stats = promote(args.paths, args.dsn, dry_run=args.dry_run)
     print(f"read:                  {stats.read}")
     print(f"skipped (no price):    {stats.skipped_no_price}")
+    print(f"skipped (bad price):   {stats.skipped_bad_price}")
     print(f"skipped (held review): {stats.skipped_review}")
     print(f"products created:      {stats.products_created}")
     print(f"stores created:        {stats.stores_created}")
