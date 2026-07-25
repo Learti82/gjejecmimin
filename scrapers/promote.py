@@ -33,10 +33,15 @@ from __future__ import annotations
 import argparse
 import glob
 import json
+import os
 import re
+import sys
 import unicodedata
 from dataclasses import dataclass
 from typing import Optional
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from validation.plausibility import is_implausible_price  # noqa: E402
 
 # Sources that are a marketplace of many individual sellers (no single store
 # identity) vs. a single retailer's own catalog. Marketplace listings get
@@ -94,6 +99,7 @@ class PromoteStats:
     read: int = 0
     skipped_no_price: int = 0
     skipped_bad_price: int = 0
+    skipped_implausible: int = 0
     skipped_review: int = 0
     products_created: int = 0
     stores_created: int = 0
@@ -148,6 +154,9 @@ def promote(paths: list[str], dsn: str, dry_run: bool = False) -> PromoteStats:
             continue
         if price < 0 or price >= MAX_PRICE:
             stats.skipped_bad_price += 1  # junk value the DB column can't hold
+            continue
+        if is_implausible_price(row["category"], price, row.get("attributes")):
+            stats.skipped_implausible += 1  # too-low "contact me" placeholder
             continue
         if row.get("review_flags"):
             stats.skipped_review += 1
@@ -301,6 +310,7 @@ def main(argv=None) -> None:
     print(f"read:                  {stats.read}")
     print(f"skipped (no price):    {stats.skipped_no_price}")
     print(f"skipped (bad price):   {stats.skipped_bad_price}")
+    print(f"skipped (fake low):    {stats.skipped_implausible}")
     print(f"skipped (held review): {stats.skipped_review}")
     print(f"products created:      {stats.products_created}")
     print(f"stores created:        {stats.stores_created}")

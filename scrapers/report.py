@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from analysis.neighborhoods import tag_neighborhood
+from validation.plausibility import is_implausible_price
 
 LOW_CONFIDENCE_THRESHOLD = 3
 
@@ -138,10 +139,13 @@ class GroupStats:
 def build_groups(rows: list[dict]) -> dict[tuple[str, ...], GroupStats]:
     groups: dict[tuple[str, ...], GroupStats] = {}
     for row in rows:
-        if row.get("price") is None:
+        price = row.get("price")
+        if price is None:
             continue
         if row.get("review_flags"):
             continue  # benchmark-held outliers don't count toward averages
+        if is_implausible_price(row["category"], price, row.get("attributes")):
+            continue  # fake "contact me" low prices must not skew averages
         key = group_key(row)
         g = groups.setdefault(key, GroupStats(key=key, currency=row.get("currency") or "EUR"))
         g.prices.append(float(row["price"]))
