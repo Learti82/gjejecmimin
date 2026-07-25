@@ -251,7 +251,9 @@ def cmd_run(args: argparse.Namespace) -> None:
     zero_match_pages = 0
     try:
         for path in cfg.start_paths:
+            page_num = 0
             for url in page_urls(cfg, path, max_pages=args.pages):
+                page_num += 1
                 verdict = client.allowed(url)
                 if verdict is False:
                     print(f"  robots disallows {url} — skipping")
@@ -269,7 +271,17 @@ def cmd_run(args: argparse.Namespace) -> None:
                     continue
                 page_records = list(records_from_html(cfg, html))
                 if not page_records:
-                    zero_match_pages += 1
+                    # A successfully-fetched page with no listings means we've
+                    # paginated past the end of this filter's results (or the
+                    # very first page is empty — e.g. a wrong city slug). Either
+                    # way, stop paginating this start_path instead of hammering
+                    # up to --pages empty pages. Big win when crawling many
+                    # cities where most have far fewer than --pages of listings.
+                    if page_num > 1:
+                        print(f"  {path}: reached end of results at page {page_num}")
+                    else:
+                        zero_match_pages += 1
+                    break
                 all_records.extend(page_records)
     finally:
         if hasattr(client, "close"):

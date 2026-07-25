@@ -1,0 +1,78 @@
+id: merrjep_ks_land
+site: MerrJep Kosovo
+category: real_estate
+country: XK
+base_url: https://www.merrjep.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false
+# LAND ONLY (toke-fusha-farma = Truall/Tokë/Fusha dhe farma), split per city.
+# URL pattern confirmed via search:
+#   /shpallje/patundshmeri/toke-fusha-farma/<city>
+# Same verified site-wide selectors as the combined real_estate config.
+selectors_verified: true
+
+start_paths:
+  - /shpallje/patundshmeri/toke-fusha-farma/prishtine
+  - /shpallje/patundshmeri/toke-fusha-farma/prizren
+  - /shpallje/patundshmeri/toke-fusha-farma/peje
+  - /shpallje/patundshmeri/toke-fusha-farma/gjakove
+  - /shpallje/patundshmeri/toke-fusha-farma/gjilan
+  - /shpallje/patundshmeri/toke-fusha-farma/ferizaj
+  - /shpallje/patundshmeri/toke-fusha-farma/mitrovice
+  - /shpallje/patundshmeri/toke-fusha-farma/vushtrri
+  - /shpallje/patundshmeri/toke-fusha-farma/podujeve
+  - /shpallje/patundshmeri/toke-fusha-farma/fushe-kosove
+  - /shpallje/patundshmeri/toke-fusha-farma/lipjan
+  - /shpallje/patundshmeri/toke-fusha-farma/rahovec
+  - /shpallje/patundshmeri/toke-fusha-farma/suhareke
+  - /shpallje/patundshmeri/toke-fusha-farma/malisheve
+  - /shpallje/patundshmeri/toke-fusha-farma/kamenice
+  - /shpallje/patundshmeri/toke-fusha-farma/istog
+  - /shpallje/patundshmeri/toke-fusha-farma/kline
+  - /shpallje/patundshmeri/toke-fusha-farma/skenderaj
+  - /shpallje/patundshmeri/toke-fusha-farma/decan
+  - /shpallje/patundshmeri/toke-fusha-farma/viti
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 100
+
+listing_selector: "div.row-listing[data-product-id]"
+
+external_id:
+  attr: data-product-id
+
+fields:
+  title:
+    selector: "h2 a.Link_vis"
+  url:
+    selector: "h2 a.Link_vis"
+    attr: href
+  price:
+    selector: "p.list-price"
+  price_kind:
+    const: asking_price
+  price_period:
+    selector: "p.list-price"
+    regex: "(muaj)"
+  property_type:
+    selector: "div.title > a.link-html.nobold"
+    index: 0
+  city:
+    selector: "div.title > a.link-html.nobold"
+    index: -1
+  is_dealer:
+    selector: "span.label.label-default.isstore"
+    exists: true
+  is_trusted_seller:
+    selector: "span.badge-trusted-seller"
+    exists: true
+
+notes: >
+  Land/plots only, one crawl per city. Writes output/merrjep_ks_land.jsonl +
+  .csv. Most land listings are sales; any rentals still split via price_period.
+  See merrjep_ks_apartments notes for the city-slug caveat.

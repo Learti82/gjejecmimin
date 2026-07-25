@@ -1,0 +1,77 @@
+id: merrjep_ks_houses
+site: MerrJep Kosovo
+category: real_estate
+country: XK
+base_url: https://www.merrjep.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false
+# HOUSES ONLY (shtepi), split per city. URL pattern confirmed via search:
+#   /shpallje/patundshmeri/shtepi/<city>
+# Same verified site-wide selectors as the combined real_estate config.
+selectors_verified: true
+
+start_paths:
+  - /shpallje/patundshmeri/shtepi/prishtine
+  - /shpallje/patundshmeri/shtepi/prizren
+  - /shpallje/patundshmeri/shtepi/peje
+  - /shpallje/patundshmeri/shtepi/gjakove
+  - /shpallje/patundshmeri/shtepi/gjilan
+  - /shpallje/patundshmeri/shtepi/ferizaj
+  - /shpallje/patundshmeri/shtepi/mitrovice
+  - /shpallje/patundshmeri/shtepi/vushtrri
+  - /shpallje/patundshmeri/shtepi/podujeve
+  - /shpallje/patundshmeri/shtepi/fushe-kosove
+  - /shpallje/patundshmeri/shtepi/lipjan
+  - /shpallje/patundshmeri/shtepi/rahovec
+  - /shpallje/patundshmeri/shtepi/suhareke
+  - /shpallje/patundshmeri/shtepi/malisheve
+  - /shpallje/patundshmeri/shtepi/kamenice
+  - /shpallje/patundshmeri/shtepi/istog
+  - /shpallje/patundshmeri/shtepi/kline
+  - /shpallje/patundshmeri/shtepi/skenderaj
+  - /shpallje/patundshmeri/shtepi/decan
+  - /shpallje/patundshmeri/shtepi/viti
+
+pagination:
+  mode: query_param
+  param: page
+  start: 1
+  max_pages: 100
+
+listing_selector: "div.row-listing[data-product-id]"
+
+external_id:
+  attr: data-product-id
+
+fields:
+  title:
+    selector: "h2 a.Link_vis"
+  url:
+    selector: "h2 a.Link_vis"
+    attr: href
+  price:
+    selector: "p.list-price"
+  price_kind:
+    const: asking_price
+  price_period:
+    selector: "p.list-price"
+    regex: "(muaj)"
+  property_type:
+    selector: "div.title > a.link-html.nobold"
+    index: 0
+  city:
+    selector: "div.title > a.link-html.nobold"
+    index: -1
+  is_dealer:
+    selector: "span.label.label-default.isstore"
+    exists: true
+  is_trusted_seller:
+    selector: "span.badge-trusted-seller"
+    exists: true
+
+notes: >
+  Houses only, one crawl per city. Writes output/merrjep_ks_houses.jsonl + .csv.
+  Sales vs rentals split via price_period. See merrjep_ks_apartments notes for
+  the city-slug caveat.

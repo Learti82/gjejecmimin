@@ -197,7 +197,10 @@ python official_data_importers/fuel_bulletin_importer.py path/to/fuel_bulletin.c
 | Config | Category | Verified | Notes |
 |---|---|---|---|
 | `merrjep_ks_cars` | cars | ✅ | live path `/shpallje/makina/vetura`; 4-link breadcrumb |
-| `merrjep_ks_real_estate` | real_estate | ❌ (one `inspect` away) | live path `/shpallje/patundshmeri`; 2-link breadcrumb (type, city); rentals detected via `/ muaj` |
+| `merrjep_ks_real_estate` | real_estate | ✅ | combined feed `/shpallje/patundshmeri`; 2-link breadcrumb (type, city); rentals via `/ muaj` |
+| `merrjep_ks_apartments` | real_estate | ✅ | apartments only (`banesa`), one deep crawl **per city** (20 cities), separate output file |
+| `merrjep_ks_houses` | real_estate | ✅ | houses only (`shtepi`), per city, separate output file |
+| `merrjep_ks_land` | real_estate | ✅ | land only (`toke-fusha-farma`), per city, separate output file |
 | `merrjep_ks_car_parts` | car_parts | ✅ | live path confirmed; 2-link breadcrumb (category, city) — most listings have no price (contact-only), which is expected |
 | `vivafresh` | groceries | ❌ | selectors confirmed live; needs a real category start_path |
 | `gjirafamall_fragrances` | fragrances_cosmetics | ❌ + ⚠️ ToS | fully wired from live `discover`; blocked by `tos_restricted` |
@@ -219,10 +222,14 @@ to confirm and flip `selectors_verified: true`.
 # --- Cars (MerrJep) — already verified ---
 python engine/runner.py run merrjep_ks_cars --pages 10
 
-# --- Real estate (MerrJep) — one crawl gets every city + apartments/houses/land ---
-python engine/runner.py inspect merrjep_ks_real_estate --pages 1   # confirm sample first
-#   then set selectors_verified: true in the config, and:
-python engine/runner.py run merrjep_ks_real_estate --pages 50
+# --- Real estate (MerrJep) — split by type, deep per city (100 pages each) ---
+#   Three separate configs => three separate output files. Each crawls every
+#   city up to 100 pages and stops early when a city runs out of listings.
+python engine/runner.py run merrjep_ks_apartments --pages 100
+python engine/runner.py run merrjep_ks_houses --pages 100
+python engine/runner.py run merrjep_ks_land --pages 100
+#   (the combined feed still exists if you want everything mixed:)
+python engine/runner.py run merrjep_ks_real_estate --pages 100
 
 # --- Car parts (MerrJep) — already verified ---
 python engine/runner.py run merrjep_ks_car_parts --pages 30

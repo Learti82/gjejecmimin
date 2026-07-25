@@ -1,0 +1,86 @@
+id: merrjep_ks_apartments
+site: MerrJep Kosovo
+category: real_estate     # MUST match folder name (configs/real_estate/)
+country: XK
+base_url: https://www.merrjep.com
+trust_tier: verified_retailer
+default_currency: EUR
+rate_limit_seconds: 2.0
+js_rendered: false
+# Same site-wide selectors as the combined real_estate config (verified live).
+# This one is APARTMENTS ONLY (banesa), split per city so each city gets its
+# own deep crawl. URL pattern confirmed via search:
+#   /shpallje/patundshmeri/banesa/<city>   (both sale + rent; price_period
+#   tells them apart). Selectors are identical to the verified combined config,
+#   so this is marked verified — but run `inspect merrjep_ks_apartments
+#   --pages 1` once to confirm the per-city pages parse the same.
+selectors_verified: true
+
+# One start_path per city. `run` paginates each up to --pages and STOPS early
+# when a city runs out of listings, so small cities don't waste requests.
+# Add/remove cities freely; slugs are the diacritic-stripped city names.
+start_paths:
+  - /shpallje/patundshmeri/banesa/prishtine
+  - /shpallje/patundshmeri/banesa/prizren
+  - /shpallje/patundshmeri/banesa/peje
+  - /shpallje/patundshmeri/banesa/gjakove
+  - /shpallje/patundshmeri/banesa/gjilan
+  - /shpallje/patundshmeri/banesa/ferizaj
+  - /shpallje/patundshmeri/banesa/mitrovice
+  - /shpallje/patundshmeri/banesa/vushtrri
+  - /shpallje/patundshmeri/banesa/podujeve
+  - /shpallje/patundshmeri/banesa/fushe-kosove
+  - /shpallje/patundshmeri/banesa/lipjan
+  - /shpallje/patundshmeri/banesa/rahovec
+  - /shpallje/patundshmeri/banesa/suhareke
+  - /shpallje/patundshmeri/banesa/malisheve
+  - /shpallje/patundshmeri/banesa/kamenice
+  - /shpallje/patundshmeri/banesa/istog
+  - /shpallje/patundshmeri/banesa/kline
+  - /shpallje/patundshmeri/banesa/skenderaj
+  - /shpallje/patundshmeri/banesa/decan
+  - /shpallje/patundshmeri/banesa/viti
+
+pagination:
+  mode: query_param
+  param: page          # verify by clicking to page 2 on a city page
+  start: 1
+  max_pages: 100        # per city — override with --pages
+
+listing_selector: "div.row-listing[data-product-id]"
+
+external_id:
+  attr: data-product-id
+
+fields:
+  title:
+    selector: "h2 a.Link_vis"
+  url:
+    selector: "h2 a.Link_vis"
+    attr: href
+  price:
+    selector: "p.list-price"
+  price_kind:
+    const: asking_price
+  price_period:
+    selector: "p.list-price"
+    regex: "(muaj)"            # present => rental (per month); absent => sale
+  property_type:
+    selector: "div.title > a.link-html.nobold"
+    index: 0
+  city:
+    selector: "div.title > a.link-html.nobold"
+    index: -1
+  is_dealer:
+    selector: "span.label.label-default.isstore"
+    exists: true
+  is_trusted_seller:
+    selector: "span.badge-trusted-seller"
+    exists: true
+
+notes: >
+  Apartments only, one crawl per city (up to 100 pages each, early-stops when a
+  city runs out). Sales vs rentals split via price_period. Writes
+  output/merrjep_ks_apartments.jsonl + .csv. City slugs are best-effort
+  diacritic-stripped names — if a city returns "reached end at page 1"
+  immediately, its slug is probably wrong; check the real URL on the site.
