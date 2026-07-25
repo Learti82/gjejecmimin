@@ -71,3 +71,28 @@ export async function getRealEstateCities(): Promise<CityCount[]> {
     listings: num(r.listings),
   }));
 }
+
+export interface CityStat {
+  city: string;
+  listings: number;
+  avg_price: number;
+  median_price: number;
+}
+
+export async function getRealEstateCityStats(
+  kind: string = "sale",
+  propertyType: string | null = null,
+): Promise<CityStat[]> {
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase.rpc("real_estate_city_stats", {
+    p_kind: kind,
+    p_property_type: propertyType,
+  });
+  if (error) throw new Error(`getRealEstateCityStats failed: ${error.message}`);
+  return (data ?? []).map((r: CityStat) => ({
+    city: r.city,
+    listings: num(r.listings),
+    avg_price: num(r.avg_price),
+    median_price: num(r.median_price),
+  }));
+}

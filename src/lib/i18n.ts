@@ -127,6 +127,7 @@ const sq = {
     goodPrice: "nën mesataren",
     highPrice: "mbi mesataren",
     ofAvg: "e mesatares së grupit",
+    coloredBy: "Ngjyrosur sipas çmimit mesatar",
   },
   categories: {
     groceries: "Ushqime",
@@ -254,6 +255,7 @@ const en: typeof sq = {
     goodPrice: "below average",
     highPrice: "above average",
     ofAvg: "of group average",
+    coloredBy: "Shaded by average price",
   },
   categories: {
     groceries: "Groceries",

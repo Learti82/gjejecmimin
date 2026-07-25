@@ -4,11 +4,14 @@ import { isSupabaseConfigured } from "@/lib/supabase/server";
 import {
   getRealEstateGroups,
   getRealEstateCities,
+  getRealEstateCityStats,
   type RealEstateGroup,
+  type CityStat,
 } from "@/lib/data/realEstate";
 import { getDict } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
 import { KOSOVO_MUNICIPALITIES } from "@/lib/kosovo";
+import { KosovoMap } from "@/components/KosovoMap";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Compare real estate" };
@@ -41,11 +44,15 @@ export default async function ExplorePage({
   const minPrice = toNum(searchParams.min);
   const maxPrice = toNum(searchParams.max);
 
+  // The map colours by a single kind (sale/rent scales differ); default sale.
+  const mapKind = kind === "rent" ? "rent" : "sale";
+
   let groups: RealEstateGroup[] = [];
   let cities: { city: string; listings: number }[] = [];
+  let cityStats: CityStat[] = [];
   let error: string | null = null;
   try {
-    [groups, cities] = await Promise.all([
+    [groups, cities, cityStats] = await Promise.all([
       getRealEstateGroups({
         city,
         kind,
@@ -55,6 +62,7 @@ export default async function ExplorePage({
         minListings: 3, // averages need a few listings to be meaningful
       }),
       getRealEstateCities(),
+      getRealEstateCityStats(mapKind, type),
     ]);
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
@@ -125,6 +133,20 @@ export default async function ExplorePage({
           {t.apply}
         </button>
       </form>
+
+      {!error && (
+        <KosovoMap
+          stats={cityStats}
+          selectedCity={city}
+          preserve={{
+            kind: kind ?? undefined,
+            type: type ?? undefined,
+            min: searchParams.min,
+            max: searchParams.max,
+          }}
+          labelColorBy={`${t.coloredBy} · ${mapKind === "rent" ? t.rent : t.sale}`}
+        />
+      )}
 
       {error ? (
         <SetupNotice detail={error} />
