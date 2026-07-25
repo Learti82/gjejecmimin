@@ -26,6 +26,12 @@ export function SiteHeader() {
           >
             {dict.nav.search}
           </Link>
+          <Link
+            href="/explore"
+            className="hidden text-slate-600 transition hover:text-slate-900 sm:inline"
+          >
+            {dict.explore.nav}
+          </Link>
           <LanguageSwitcher current={locale} />
         </nav>
       </div>

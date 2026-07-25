@@ -42,6 +42,7 @@ from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from validation.plausibility import is_implausible_price  # noqa: E402
+from analysis.listing_attrs import parse_rooms, parse_area_m2  # noqa: E402
 
 # Sources that are a marketplace of many individual sellers (no single store
 # identity) vs. a single retailer's own catalog. Marketplace listings get
@@ -264,6 +265,11 @@ def promote(paths: list[str], dsn: str, dry_run: bool = False) -> PromoteStats:
                     continue
                 store_id = None if is_marketplace_source(source) \
                     else store_id_by_source.get(source)
+                attrs = row.get("attributes") or {}
+                listing_kind = "rent" if attrs.get("price_period") == "muaj" else (
+                    "sale" if row["category"] == "real_estate" else None
+                )
+                title = row.get("title") or ""
                 obs_params.append((
                     product_id[row["_canonical"]],
                     store_id,
@@ -275,14 +281,19 @@ def promote(paths: list[str], dsn: str, dry_run: bool = False) -> PromoteStats:
                     row.get("city"),
                     row.get("region"),
                     row.get("raw_source_text"),
+                    listing_kind,
+                    attrs.get("property_type"),
+                    parse_rooms(title),
+                    parse_area_m2(title),
                 ))
 
             if not dry_run and obs_params:
                 cur.executemany(
                     "insert into price_observations "
                     "(product_id, store_id, price, currency, observed_at, "
-                    " trust_tier, source_id, geo_city, geo_region, raw_source_text) "
-                    "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                    " trust_tier, source_id, geo_city, geo_region, raw_source_text, "
+                    " listing_kind, property_type, rooms, area_m2) "
+                    "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                     "on conflict (source_id, observed_at) where source_id is not null "
                     "do nothing",
                     obs_params,

@@ -36,3 +36,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 /scrapers/output/
+
+# local preview helpers
+/preview-*.local.js
