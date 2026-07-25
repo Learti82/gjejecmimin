@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ObservationRow } from "@/components/ObservationRow";
+import { ProductImage } from "@/components/ProductImage";
 import { TrustBadge } from "@/components/TrustBadge";
 import { TrustLegend } from "@/components/TrustLegend";
 import { SetupNotice } from "@/components/SetupNotice";
@@ -62,21 +63,28 @@ export default async function ProductPage({
           {dict.product.back}
         </Link>
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">
-                {product.name}
-              </h1>
-              {product.unit && (
-                <span className="rounded bg-slate-100 px-2 py-0.5 text-sm text-slate-500">
-                  {product.unit}
-                </span>
-              )}
+          <div className="flex items-center gap-4">
+            <ProductImage
+              name={product.name}
+              category={product.category}
+              size="lg"
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-slate-900">
+                  {product.name}
+                </h1>
+                {product.unit && (
+                  <span className="rounded bg-slate-100 px-2 py-0.5 text-sm text-slate-500">
+                    {product.unit}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-slate-500">
+                {product.brand ? `${product.brand} · ` : ""}
+                {localizedCategory(product.category, dict)}
+              </p>
             </div>
-            <p className="mt-1 text-sm text-slate-500">
-              {product.brand ? `${product.brand} · ` : ""}
-              {localizedCategory(product.category, dict)}
-            </p>
           </div>
 
           {stats.count > 0 && (
