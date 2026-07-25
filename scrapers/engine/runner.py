@@ -303,7 +303,13 @@ def cmd_run(args: argparse.Namespace) -> None:
 
     # Always write a local, downloadable file (JSONL + CSV) — even when also
     # pushing to a database — so there's always a copy you can open/share.
-    out = args.out or os.path.join("scrapers", "output", f"{cfg.id}.jsonl")
+    # Anchor the default to <scrapers>/output regardless of the current working
+    # directory, so running from inside scrapers/ doesn't create a nested
+    # scrapers/scrapers/output folder. An explicit --out is still honored as-is.
+    default_out_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output"
+    )
+    out = args.out or os.path.join(default_out_dir, f"{cfg.id}.jsonl")
     n = storage.write_jsonl(records, out)
     print(f"wrote {n} rows to {out}")
     if not args.no_csv:

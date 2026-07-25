@@ -39,11 +39,26 @@ from analysis.neighborhoods import tag_neighborhood
 LOW_CONFIDENCE_THRESHOLD = 3
 
 
+import os as _os
+
+SCRAPERS_DIR = _os.path.dirname(_os.path.abspath(__file__))
+
+
+def _resolve(pattern: str) -> list[str]:
+    """Match a glob pattern relative to the CWD, and if that finds nothing, also
+    try it relative to the scrapers/ directory — so `report.py "output/x.jsonl"`
+    works whether you run it from the repo root or from inside scrapers/."""
+    matches = sorted(glob.glob(pattern))
+    if not matches and not _os.path.isabs(pattern):
+        matches = sorted(glob.glob(_os.path.join(SCRAPERS_DIR, pattern)))
+    return matches
+
+
 def _read_rows(paths: list[str]) -> list[dict]:
     rows: list[dict] = []
     matched_any = False
     for pattern in paths:
-        matches = sorted(glob.glob(pattern))
+        matches = _resolve(pattern)
         if not matches:
             continue
         matched_any = True
