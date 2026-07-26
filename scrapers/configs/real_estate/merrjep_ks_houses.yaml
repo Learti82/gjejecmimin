@@ -33,6 +33,26 @@ start_paths:
   - /shpallje/patundshmeri/shtepi/skenderaj
   - /shpallje/patundshmeri/shtepi/decan
   - /shpallje/patundshmeri/shtepi/viti
+  # Remaining municipalities — most are tiny and stop after 1 empty page, so
+  # they cost almost nothing but fill any city that does have listings.
+  - /shpallje/patundshmeri/shtepi/gllogoc
+  - /shpallje/patundshmeri/shtepi/dragash
+  - /shpallje/patundshmeri/shtepi/kacanik
+  - /shpallje/patundshmeri/shtepi/shtime
+  - /shpallje/patundshmeri/shtepi/obiliq
+  - /shpallje/patundshmeri/shtepi/gracanice
+  - /shpallje/patundshmeri/shtepi/shterpce
+  - /shpallje/patundshmeri/shtepi/leposaviq
+  - /shpallje/patundshmeri/shtepi/zvecan
+  - /shpallje/patundshmeri/shtepi/zubin-potok
+  - /shpallje/patundshmeri/shtepi/mitrovice-e-veriut
+  - /shpallje/patundshmeri/shtepi/novoberde
+  - /shpallje/patundshmeri/shtepi/hani-i-elezit
+  - /shpallje/patundshmeri/shtepi/junik
+  - /shpallje/patundshmeri/shtepi/mamushe
+  - /shpallje/patundshmeri/shtepi/kllokot
+  - /shpallje/patundshmeri/shtepi/partesh
+  - /shpallje/patundshmeri/shtepi/ranillug
 
 pagination:
   mode: query_param

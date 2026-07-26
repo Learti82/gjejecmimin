@@ -34,6 +34,26 @@ start_paths:
   - /shpallje/patundshmeri/toke-fusha-farma/skenderaj
   - /shpallje/patundshmeri/toke-fusha-farma/decan
   - /shpallje/patundshmeri/toke-fusha-farma/viti
+  # Remaining municipalities — most are tiny and stop after 1 empty page, so
+  # they cost almost nothing but fill any city that does have listings.
+  - /shpallje/patundshmeri/toke-fusha-farma/gllogoc
+  - /shpallje/patundshmeri/toke-fusha-farma/dragash
+  - /shpallje/patundshmeri/toke-fusha-farma/kacanik
+  - /shpallje/patundshmeri/toke-fusha-farma/shtime
+  - /shpallje/patundshmeri/toke-fusha-farma/obiliq
+  - /shpallje/patundshmeri/toke-fusha-farma/gracanice
+  - /shpallje/patundshmeri/toke-fusha-farma/shterpce
+  - /shpallje/patundshmeri/toke-fusha-farma/leposaviq
+  - /shpallje/patundshmeri/toke-fusha-farma/zvecan
+  - /shpallje/patundshmeri/toke-fusha-farma/zubin-potok
+  - /shpallje/patundshmeri/toke-fusha-farma/mitrovice-e-veriut
+  - /shpallje/patundshmeri/toke-fusha-farma/novoberde
+  - /shpallje/patundshmeri/toke-fusha-farma/hani-i-elezit
+  - /shpallje/patundshmeri/toke-fusha-farma/junik
+  - /shpallje/patundshmeri/toke-fusha-farma/mamushe
+  - /shpallje/patundshmeri/toke-fusha-farma/kllokot
+  - /shpallje/patundshmeri/toke-fusha-farma/partesh
+  - /shpallje/patundshmeri/toke-fusha-farma/ranillug
 
 pagination:
   mode: query_param

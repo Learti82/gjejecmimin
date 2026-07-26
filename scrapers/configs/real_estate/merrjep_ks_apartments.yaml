@@ -40,6 +40,26 @@ start_paths:
   - /shpallje/patundshmeri/banesa/skenderaj
   - /shpallje/patundshmeri/banesa/decan
   - /shpallje/patundshmeri/banesa/viti
+  # Remaining municipalities — most are tiny and stop after 1 empty page, so
+  # they cost almost nothing but fill any city that does have listings.
+  - /shpallje/patundshmeri/banesa/gllogoc
+  - /shpallje/patundshmeri/banesa/dragash
+  - /shpallje/patundshmeri/banesa/kacanik
+  - /shpallje/patundshmeri/banesa/shtime
+  - /shpallje/patundshmeri/banesa/obiliq
+  - /shpallje/patundshmeri/banesa/gracanice
+  - /shpallje/patundshmeri/banesa/shterpce
+  - /shpallje/patundshmeri/banesa/leposaviq
+  - /shpallje/patundshmeri/banesa/zvecan
+  - /shpallje/patundshmeri/banesa/zubin-potok
+  - /shpallje/patundshmeri/banesa/mitrovice-e-veriut
+  - /shpallje/patundshmeri/banesa/novoberde
+  - /shpallje/patundshmeri/banesa/hani-i-elezit
+  - /shpallje/patundshmeri/banesa/junik
+  - /shpallje/patundshmeri/banesa/mamushe
+  - /shpallje/patundshmeri/banesa/kllokot
+  - /shpallje/patundshmeri/banesa/partesh
+  - /shpallje/patundshmeri/banesa/ranillug
 
 pagination:
   mode: query_param
