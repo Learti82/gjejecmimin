@@ -5,8 +5,10 @@ import {
   getRealEstateGroups,
   getRealEstateCities,
   getRealEstateCityStats,
+  getRealEstateNeighborhoods,
   type RealEstateGroup,
   type CityStat,
+  type NeighborhoodStat,
 } from "@/lib/data/realEstate";
 import { getDict } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
@@ -52,7 +54,7 @@ export default async function ExplorePage({
   let cityStats: CityStat[] = [];
   let error: string | null = null;
   try {
-    [groups, cities, cityStats] = await Promise.all([
+    [groups, cities] = await Promise.all([
       getRealEstateGroups({
         city,
         kind,
@@ -62,10 +64,27 @@ export default async function ExplorePage({
         minListings: 3, // averages need a few listings to be meaningful
       }),
       getRealEstateCities(),
-      getRealEstateCityStats(mapKind, type),
     ]);
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
+  }
+  // Map colouring is optional — a missing real_estate_city_stats function (not
+  // yet migrated) must NOT blank the whole page. Degrade to an uncoloured map.
+  try {
+    cityStats = await getRealEstateCityStats(mapKind, type);
+  } catch {
+    cityStats = [];
+  }
+
+  // Neighborhood breakdown — only when a city is picked; resilient to a missing
+  // migration so it never blanks the page.
+  let neighborhoods: NeighborhoodStat[] = [];
+  if (city) {
+    try {
+      neighborhoods = await getRealEstateNeighborhoods(city, mapKind, type);
+    } catch {
+      neighborhoods = [];
+    }
   }
 
   // Prefer cities that actually have data; fall back to the full municipality list.
@@ -134,18 +153,59 @@ export default async function ExplorePage({
         </button>
       </form>
 
-      {!error && (
-        <KosovoMap
-          stats={cityStats}
-          selectedCity={city}
-          preserve={{
-            kind: kind ?? undefined,
-            type: type ?? undefined,
-            min: searchParams.min,
-            max: searchParams.max,
-          }}
-          labelColorBy={`${t.coloredBy} · ${mapKind === "rent" ? t.rent : t.sale}`}
-        />
+      <KosovoMap
+        stats={cityStats}
+        selectedCity={city}
+        preserve={{
+          kind: kind ?? undefined,
+          type: type ?? undefined,
+          min: searchParams.min,
+          max: searchParams.max,
+        }}
+        labelColorBy={`${t.coloredBy} · ${mapKind === "rent" ? t.rent : t.sale}`}
+      />
+
+      {city && neighborhoods.length > 0 && (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="border-b border-slate-100 px-4 py-3">
+            <h2 className="font-semibold text-slate-900">
+              {t.neighborhoodsIn} {city}
+            </h2>
+            <p className="text-xs text-slate-500">{t.neighborhoodsHint}</p>
+          </div>
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-4 py-2 font-medium">{t.area}</th>
+                <th className="px-4 py-2 text-right font-medium">€/m²</th>
+                <th className="px-4 py-2 text-right font-medium">{t.avg}</th>
+                <th className="px-4 py-2 text-right font-medium">
+                  {t.listingsLabel}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {neighborhoods.map((n, i) => (
+                <tr key={i}>
+                  <td className="px-4 py-2 font-medium text-slate-800">
+                    {n.neighborhood ?? t.otherAreas}
+                  </td>
+                  <td className="px-4 py-2 text-right text-slate-700">
+                    {n.avg_price_per_m2 !== null
+                      ? formatPrice(n.avg_price_per_m2, "EUR")
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-2 text-right text-slate-700">
+                    {formatPrice(n.avg_price, "EUR")}
+                  </td>
+                  <td className="px-4 py-2 text-right text-slate-400">
+                    {n.listings}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {error ? (

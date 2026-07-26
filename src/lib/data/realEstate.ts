@@ -96,3 +96,34 @@ export async function getRealEstateCityStats(
     median_price: num(r.median_price),
   }));
 }
+
+export interface NeighborhoodStat {
+  neighborhood: string | null;
+  listings: number;
+  avg_price: number;
+  median_price: number;
+  avg_price_per_m2: number | null;
+}
+
+export async function getRealEstateNeighborhoods(
+  city: string,
+  kind: string = "sale",
+  propertyType: string | null = null,
+): Promise<NeighborhoodStat[]> {
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase.rpc("real_estate_neighborhoods", {
+    p_city: city,
+    p_kind: kind,
+    p_property_type: propertyType,
+  });
+  if (error)
+    throw new Error(`getRealEstateNeighborhoods failed: ${error.message}`);
+  return (data ?? []).map((r: NeighborhoodStat) => ({
+    neighborhood: r.neighborhood,
+    listings: num(r.listings),
+    avg_price: num(r.avg_price),
+    median_price: num(r.median_price),
+    avg_price_per_m2:
+      r.avg_price_per_m2 === null ? null : num(r.avg_price_per_m2),
+  }));
+}

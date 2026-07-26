@@ -128,6 +128,10 @@ const sq = {
     highPrice: "mbi mesataren",
     ofAvg: "e mesatares së grupit",
     coloredBy: "Ngjyrosur sipas çmimit mesatar",
+    neighborhoodsIn: "Lagjet në",
+    neighborhoodsHint: "Çmimi mesatar për m² sipas lagjes (nga teksti i shpalljeve).",
+    area: "Lagjja",
+    otherAreas: "(lagje të tjera)",
   },
   categories: {
     groceries: "Ushqime",
@@ -256,6 +260,10 @@ const en: typeof sq = {
     highPrice: "above average",
     ofAvg: "of group average",
     coloredBy: "Shaded by average price",
+    neighborhoodsIn: "Neighborhoods in",
+    neighborhoodsHint: "Average price per m² by neighborhood (parsed from listing titles).",
+    area: "Area",
+    otherAreas: "(other areas)",
   },
   categories: {
     groceries: "Groceries",
