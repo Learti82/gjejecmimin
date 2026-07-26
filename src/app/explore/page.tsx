@@ -268,10 +268,10 @@ function GroupCard({
       <div className="mt-3 flex items-end justify-between">
         <div>
           <div className="text-xs uppercase tracking-wide text-slate-400">
-            {t.avg}
+            {t.median}
           </div>
           <div className="text-2xl font-bold text-slate-900">
-            {formatPrice(g.avg_price, g.currency)}
+            {formatPrice(g.median_price, g.currency)}
             {isRent && (
               <span className="text-sm font-normal text-slate-400">
                 {t.perMonth}
@@ -293,7 +293,7 @@ function GroupCard({
 
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-2 text-xs text-slate-500">
         <span>
-          {t.median}: {formatPrice(g.median_price, g.currency)}
+          {t.avg}: {formatPrice(g.avg_price, g.currency)}
         </span>
         <span>
           {t.range}: {formatPrice(g.min_price, g.currency)} –{" "}

@@ -119,7 +119,9 @@ export function KosovoMap({
     const px = (lng: number) => (lng - minLng) * kx * scale;
     const py = (lat: number) => (maxLat - lat) * scale;
 
-    const vals = stats.map((s) => s.avg_price).filter((v) => v > 0);
+    // Colour by median €/m² — robust to outliers and comparable across cities.
+    const metric = (s: CityStat) => s.median_ppm2 ?? 0;
+    const vals = stats.map(metric).filter((v) => v > 0);
     const minV = vals.length ? Math.min(...vals) : 0;
     const maxV = vals.length ? Math.max(...vals) : 0;
 
@@ -135,11 +137,12 @@ export function KosovoMap({
         )
         .join(" ");
       const stat = matchStat(f.properties.name, byName);
-      let fill = "#e5e7eb"; // no data
-      if (stat && maxV > minV) {
-        const t = Math.sqrt((stat.avg_price - minV) / (maxV - minV));
+      const v = stat ? metric(stat) : 0;
+      let fill = "#e5e7eb"; // no data (or no €/m² for this city)
+      if (v > 0 && maxV > minV) {
+        const t = Math.sqrt((v - minV) / (maxV - minV));
         fill = hexLerp("#dbeafe", "#1e3a8a", t);
-      } else if (stat) {
+      } else if (v > 0) {
         fill = "#93c5fd";
       }
       return { name: f.properties.name, d, fill, stat, W, H };
@@ -172,14 +175,14 @@ export function KosovoMap({
         <span className="text-xs text-slate-500">{labelColorBy}</span>
         {maxV > minV && (
           <div className="flex items-center gap-2 text-[11px] text-slate-500">
-            <span>{formatPrice(minV, "EUR")}</span>
+            <span>{formatPrice(minV, "EUR")}/m²</span>
             <span
               className="h-2 w-24 rounded"
               style={{
                 background: "linear-gradient(90deg,#dbeafe,#1e3a8a)",
               }}
             />
-            <span>{formatPrice(maxV, "EUR")}</span>
+            <span>{formatPrice(maxV, "EUR")}/m²</span>
           </div>
         )}
       </div>
@@ -225,9 +228,10 @@ export function KosovoMap({
             }}
           >
             <div className="font-medium">{hover.name}</div>
-            {hover.stat ? (
+            {hover.stat && hover.stat.median_ppm2 ? (
               <div className="text-slate-300">
-                {formatPrice(hover.stat.avg_price, "EUR")} · {hover.stat.listings}
+                {formatPrice(hover.stat.median_ppm2, "EUR")}/m² ·{" "}
+                {hover.stat.listings}
               </div>
             ) : (
               <div className="text-slate-400">—</div>

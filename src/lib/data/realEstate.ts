@@ -77,6 +77,8 @@ export interface CityStat {
   listings: number;
   avg_price: number;
   median_price: number;
+  /** Median €/m² — the robust, comparable metric used to colour the map. */
+  median_ppm2: number | null;
 }
 
 export async function getRealEstateCityStats(
@@ -89,12 +91,15 @@ export async function getRealEstateCityStats(
     p_property_type: propertyType,
   });
   if (error) throw new Error(`getRealEstateCityStats failed: ${error.message}`);
-  return (data ?? []).map((r: CityStat) => ({
-    city: r.city,
-    listings: num(r.listings),
-    avg_price: num(r.avg_price),
-    median_price: num(r.median_price),
-  }));
+  return (data ?? []).map(
+    (r: CityStat & { median_ppm2: number | null }) => ({
+      city: r.city,
+      listings: num(r.listings),
+      avg_price: num(r.avg_price),
+      median_price: num(r.median_price),
+      median_ppm2: r.median_ppm2 === null ? null : num(r.median_ppm2),
+    }),
+  );
 }
 
 export interface NeighborhoodStat {
